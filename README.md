@@ -116,6 +116,10 @@ To ensure code quality and standards, you can run the following Composer scripts
 * To run the vulnerability check on composer.lock packages: `docker/bin/composer security-checker`
 * To update the IDE helper files: `docker/bin/composer ide-helper-update`
 
+## Postman Collection
+
+* You can find postman collection inside `postman` directory.
+
 ## Deployment / CI Process
 
 The application has not yet been deployed to production. This section will be updated with deployment instructions later.
