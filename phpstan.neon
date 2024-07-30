@@ -1,0 +1,17 @@
+includes:
+    - ./vendor/larastan/larastan/extension.neon
+
+parameters:
+    tmpDir: .phpstan.cache
+
+    paths:
+        - app
+        - database
+        - tests
+
+    level: 0
+
+    ignoreErrors:
+        - '#Undefined variable: \$this#'
+
+    checkModelProperties: false # will enable once we have ide-helper set up

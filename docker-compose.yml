@@ -1,0 +1,87 @@
+services:
+    mysql:
+        container_name: "${COMPOSE_PROJECT_NAME}-mysql"
+        image: mysql:8.0.37
+        volumes:
+        - mysql-data:/var/lib/mysql
+        - ./docker/mysql/init:/docker-entrypoint-initdb.d
+        environment:
+            MYSQL_ROOT_PASSWORD: password
+            MYSQL_DATABASE: calendar
+            MYSQL_USER: app
+            MYSQL_PASSWORD: app
+        ports:
+        - "${DOCKER_MYSQL_LOCAL_PORT}:3306"
+        command:
+        - "--character-set-server=utf8mb4"
+        - "--collation-server=utf8mb4_unicode_ci"
+        restart: unless-stopped
+    mysql-test:
+        container_name: "${COMPOSE_PROJECT_NAME}-mysql-test"
+        image: mysql:8.0.37
+        volumes:
+        - mysql-test-data:/var/lib/mysql
+        - ./docker/mysql/init:/docker-entrypoint-initdb.d
+        environment:
+            MYSQL_ROOT_PASSWORD: password
+            MYSQL_DATABASE: calendar
+            MYSQL_USER: app
+            MYSQL_PASSWORD: app
+        ports:
+        - "3307:3306"
+        command:
+        - "--character-set-server=utf8mb4"
+        - "--collation-server=utf8mb4_unicode_ci"
+        restart: unless-stopped
+
+    ## NGINX to support the app, configured to use the php-fpm-debug server
+    nginx:
+        container_name: "${COMPOSE_PROJECT_NAME}-nginx"
+        build:
+            context: docker/nginx
+        working_dir: /app
+        volumes:
+            - .:/app
+        ports:
+            - "${DOCKER_NGINX_LOCAL_PORT}:443"
+        depends_on:
+            - php-fpm-debug
+        restart: unless-stopped
+
+    ## The PHP-FPM that's used for the app development, also useful for code coverage
+    php-fpm-debug:
+        container_name: "${COMPOSE_PROJECT_NAME}-php-fpm-debug"
+        build:
+            context: docker/php-fpm
+        working_dir: /app
+        volumes:
+            - .:/app
+        depends_on:
+            - mysql
+        environment:
+            PHP_IDE_CONFIG: "serverName=${DOCKER_SERVER_NAME}"
+        restart: unless-stopped
+
+    ## The PHP-FPM that's used for unit tests and could possibly be used for production instances
+    php-fpm:
+        container_name: "${COMPOSE_PROJECT_NAME}-php-fpm"
+        build:
+            context: docker/php-fpm
+            target: base
+            tags: # required for Docker buildx/bake to tag properly
+                - "${COMPOSE_PROJECT_NAME}-php-fpm"
+        working_dir: /app
+        volumes:
+            - .:/app
+        depends_on:
+            - mysql
+        environment:
+            PHP_IDE_CONFIG: "serverName=${DOCKER_SERVER_NAME}"
+        restart: unless-stopped
+
+volumes:
+  mysql-data:
+  mysql-test-data:
+
+networks:
+    default:
