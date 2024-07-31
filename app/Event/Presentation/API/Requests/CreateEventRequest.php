@@ -31,7 +31,7 @@ class CreateEventRequest extends FormRequest
         return [
             'user_id' => 'required|exists:users,id',
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
+            'description' => 'sometimes|required|string|max:1000',
             'start' => [
                 'required',
                 'date_format:Y-m-d\TH:i:sP',

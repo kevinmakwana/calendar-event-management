@@ -28,6 +28,7 @@ test('user can update a single event', function () {
     $this->putJson(
         route('events.update', ['event' => $event->id, 'user' => $this->user->id]),
         [
+            'title' => $event->title,
             'start' => $newStart,
             'end' => $newEnd,
             'recurring_pattern' => true,
@@ -66,6 +67,7 @@ test('user can update a single event', function () {
 test('user can update all recurring events', function () {
     $event = Event::factory()->create([
         'user_id' => $this->user->id,
+        'title' => 'Recurring Event',
         'recurring_pattern' => true,
         'frequency' => 'daily',
         'repeat_until' => now()->addMonths(1)->toIso8601String(),
@@ -98,6 +100,7 @@ test('user can update all recurring events', function () {
     $response = $this->putJson(
         route('events.update', ['event' => $event->id, 'user' => $this->user->id]),
         [
+            'title' => $event->title,
             'start' => $newStart,
             'end' => $newEnd,
             'recurring_pattern' => true,
@@ -170,7 +173,7 @@ test('user gets validation error when updating event with overlapping times', fu
         ->assertJsonValidationErrors(['start', 'end']);
 });
 
-test('user gets validation error when updating event with invalid data:', function (array $eventData) {
+test('user gets validation error when updating event with invalid data:', function (array $eventData, array $expectedErrors) {
     $event = Event::factory()->create();
 
     $data = [
@@ -178,7 +181,7 @@ test('user gets validation error when updating event with invalid data:', functi
         'description' => 'Default Description',
         'start' => now()->addDay()->toIso8601String(),
         'end' => now()->addDay()->addHour()->toIso8601String(),
-        'recurring_pattern' => null,
+        'recurring_pattern' => false,
         'frequency' => null,
         'repeat_until' => null,
     ];
@@ -191,19 +194,33 @@ test('user gets validation error when updating event with invalid data:', functi
     );
 
     $response->assertStatus(422)
-        ->assertJsonValidationErrors(array_keys($eventData));
+        ->assertJsonValidationErrors($expectedErrors);
 })
     ->with([
-        'title is too long' => [['title' => Str::random(256)]],
-        'title should be a string' => [['title' => 123]],
-        'start is invalid date format' => [['start' => 'invalid-date-format']],
-        'end is invalid date format' => [['end' => 'invalid-date-format']],
-        'start is before now' => [['start' => now()->subDay()->toIso8601String()]],
-        'end is before start' => [['end' => now()->toIso8601String()]],
-        'invalid recurring pattern' => [['recurring_pattern' => 'true']],
-        'invalid frequency' => [['frequency' => 'invalid-frequency']],
-        'repeat_until is invalid date format' => [['repeat_until' => 'invalid-date-format']],
-        'repeat_until is before end' => [['repeat_until' => now()->toIso8601String()]],
+        'title is missing' => [['title' => null], ['title']],
+        'title is required' => [['title' => ''], ['title']],
+        'title is too long' => [['title' => Str::random(256)], ['title']],
+        'title should be a string' => [['title' => 123], ['title']],
+        'description is missing' => [['description' => null], ['description']],
+        'description is required' => [['description' => ''], ['description']],
+        'description is too long' => [['description' => Str::random(1001)], ['description']],
+        'description should be a string' => [['description' => 123], ['description']],
+        'start is missing' => [['start' => null], ['start']],
+        'start is required' => [['start' => ''], ['start']],
+        'start is invalid date format' => [['start' => 'invalid-date-format'], ['start']],
+        'start is before now' => [['start' => now()->subDay()->toIso8601String()], ['start']],
+        'end is missing' => [['end' => null], ['end']],
+        'end is required' => [['end' => ''], ['end']],
+        'end is invalid date format' => [['end' => 'invalid-date-format'], ['end']],
+        'end is before start' => [['end' => now()->toIso8601String()], ['end']],
+        'invalid recurring pattern' => [['recurring_pattern' => 'true'], ['recurring_pattern']],
+        'frequency required when recurring_pattern is true' => [['recurring_pattern' => true, 'frequency' => null, 'repeat_until' => now()->addMonth()->toIso8601String()], ['frequency']],
+        'frequency should be a string' => [['frequency' => 123], ['frequency']],
+        'frequency should be daily, weekly, monthly, or yearly' => [['frequency' => 'invalid-frequency'], ['frequency']],
+        'repeat_until is required when recurring_pattern is true' => [['recurring_pattern' => true, 'frequency' => 'daily', 'repeat_until' => null], ['repeat_until']],
+        'repeat_until should be a string' => [['recurring_pattern' => true, 'frequency' => 'daily', 'repeat_until' => 123], ['repeat_until']],
+        'repeat_until is invalid date format' => [['recurring_pattern' => true, 'frequency' => 'daily', 'repeat_until' => 'invalid-date-format'], ['repeat_until']],
+        'repeat_until is before end' => [['recurring_pattern' => true, 'frequency' => 'daily', 'repeat_until' => now()->toIso8601String()], ['repeat_until']],
     ]);
 
 test('user gets validation error when frequency and repeat_until are missing while recurring_pattern is true', function () {

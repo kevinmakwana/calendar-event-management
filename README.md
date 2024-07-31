@@ -6,9 +6,9 @@ A calendar event management system which allows users to add, update, list and d
 
 Follow below command to clone repository
 
-`git clone git@github.com:kevinmakwana/calendar-event-management-test.git`
+`git clone git@github.com:kevinmakwana/calendar-event-management.git`
 
-`cd calendar-event-management-test`
+`cd calendar-event-management`
 
 ## First Time Set-up for Local Development
 

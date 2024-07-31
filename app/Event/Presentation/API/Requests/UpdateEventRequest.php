@@ -29,19 +29,19 @@ class UpdateEventRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => 'nullable|string|max:255',
-            'description' => 'nullable|string|max:1000',
+            'title' => 'required|string|max:255',
+            'description' => 'sometimes|required|string|max:1000',
             'start' => [
-                'nullable',
+                'required',
                 'date_format:Y-m-d\TH:i:sP',
                 'after_or_equal:now',
             ],
             'end' => [
-                'nullable',
+                'required',
                 'date_format:Y-m-d\TH:i:sP',
                 'after:start',
             ],
-            'recurring_pattern' => 'nullable|boolean',
+            'recurring_pattern' => 'required|boolean',
             'frequency' => [
                 'nullable',
                 Rule::requiredIf($this->input('recurring_pattern') === true),

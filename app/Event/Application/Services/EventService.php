@@ -115,8 +115,8 @@ class EventService
     public function updateEvent(Event $event, array $data): bool
     {
         DB::transaction(function () use ($event, $data) {
-            $start = $data['start'] ? $this->convertToCarbon($data['start']) : $event->start;
-            $end = $data['end'] ? $this->convertToCarbon($data['end']) : $event->end;
+            $start = $this->convertToCarbon($data['start']);
+            $end = $this->convertToCarbon($data['end']);
             $repeatUntil = isset($data['repeat_until']) ? $this->convertToCarbon($data['repeat_until']) : $event->repeat_until;
 
             $this->validateOverlap($start, $end, $event->id);
@@ -125,7 +125,7 @@ class EventService
             $frequency = $data['frequency'] ?? $event->recurring_pattern;
 
             $event->update([
-                'title' => $data['title'] ?? $event->title,
+                'title' => $data['title'],
                 'description' => $data['description'] ?? $event->description,
                 'start' => $start,
                 'end' => $end,
@@ -141,7 +141,7 @@ class EventService
                 foreach ($recurringEvents as $recurringEvent) {
                     if ($recurringEvent->id !== $event->id) {
                         $recurringEvent->update([
-                            'title' => $data['title'] ?? $recurringEvent->title,
+                            'title' => $data['title'],
                             'description' => $data['description'] ?? $recurringEvent->description,
                             'start' => $start,
                             'end' => $end,
