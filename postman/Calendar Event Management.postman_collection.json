@@ -200,7 +200,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"user_id\": 1,\n    \"title\": \"\",\n    \"description\": \"\",\n    \"start\": \"\",\n    \"end\": \"\",\n    \"recurring_pattern\": null,\n    \"frequency\": null,\n    \"repeat_until\": null\n}"
+					"raw": "{\n    \"user_id\": null,\n    \"title\": \"\",\n    \"description\": \"\",\n    \"start\": \"\",\n    \"end\": \"\",\n    \"recurring_pattern\": false,\n    \"frequency\": null,\n    \"repeat_until\": null\n}"
 				},
 				"url": {
 					"raw": "https://api.calendar-event-management.test/api/events",
@@ -275,7 +275,7 @@
 					}
 				},
 				"url": {
-					"raw": "https://api.calendar-event-management.test/api/events/11/user/1",
+					"raw": "https://api.calendar-event-management.test/api/events/11/users/1",
 					"protocol": "https",
 					"host": [
 						"api",
@@ -286,7 +286,7 @@
 						"api",
 						"events",
 						"11",
-						"user",
+						"users",
 						"1"
 					]
 				}
@@ -336,7 +336,7 @@
 					}
 				},
 				"url": {
-					"raw": "https://api.calendar-event-management.test/api/events/11/user/1",
+					"raw": "https://api.calendar-event-management.test/api/events/11/users/1",
 					"protocol": "https",
 					"host": [
 						"api",
@@ -347,7 +347,7 @@
 						"api",
 						"events",
 						"11",
-						"user",
+						"users",
 						"1"
 					]
 				}
@@ -375,7 +375,7 @@
 					}
 				},
 				"url": {
-					"raw": "https://api.calendar-event-management.test/api/events/11/user/1",
+					"raw": "https://api.calendar-event-management.test/api/events/11/users/1",
 					"protocol": "https",
 					"host": [
 						"api",
@@ -386,7 +386,7 @@
 						"api",
 						"events",
 						"11",
-						"user",
+						"users",
 						"1"
 					]
 				}
@@ -405,7 +405,7 @@
 					}
 				],
 				"url": {
-					"raw": "https://api.calendar-event-management.test/api/events/12/user/1",
+					"raw": "https://api.calendar-event-management.test/api/events/16/users/1",
 					"protocol": "https",
 					"host": [
 						"api",
@@ -415,8 +415,8 @@
 					"path": [
 						"api",
 						"events",
-						"12",
-						"user",
+						"16",
+						"users",
 						"1"
 					]
 				}
@@ -435,7 +435,7 @@
 					}
 				],
 				"url": {
-					"raw": "https://api.calendar-event-management.test/api/events/11/user/1?deleteSubsequent=true",
+					"raw": "https://api.calendar-event-management.test/api/events/14/users/1?deleteSubsequent=true",
 					"protocol": "https",
 					"host": [
 						"api",
@@ -445,8 +445,8 @@
 					"path": [
 						"api",
 						"events",
-						"11",
-						"user",
+						"14",
+						"users",
 						"1"
 					],
 					"query": [
