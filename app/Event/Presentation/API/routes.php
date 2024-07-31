@@ -15,6 +15,6 @@ Route::prefix('api/events')
     ->group(function () {
         Route::get('/', [EventController::class, 'index'])->name('index');
         Route::post('/', [EventController::class, 'store'])->name('store');
-        Route::put('/{event}/user/{user}', [EventController::class, 'update'])->name('update');
-        Route::delete('/{event}/user/{user}', [EventController::class, 'destroy'])->name('destroy');
+        Route::put('/{event}/users/{user}', [EventController::class, 'update'])->name('update');
+        Route::delete('/{event}/users/{user}', [EventController::class, 'destroy'])->name('destroy');
     });
