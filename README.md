@@ -115,6 +115,7 @@ To ensure code quality and standards, you can run the following Composer scripts
 * To run PHP Mess Detector: `docker/bin/composer phpmd`
 * To run the vulnerability check on composer.lock packages: `docker/bin/composer security-checker`
 * To update the IDE helper files: `docker/bin/composer ide-helper-update`
+* To run phpcs, phpmd, larastan, security-checker, test all togather: `docker/bin/composer check-everything`
 
 ## Postman Collection
 

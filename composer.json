@@ -74,6 +74,13 @@
         "test": [
             "@putenv DB_HOST=mysql-test",
             "vendor/bin/pest --stop-on-error --stop-on-failure --parallel --compact"
+        ],
+        "check-everything" : [
+            "@phpcs",
+            "@phpmd",
+            "@larastan",
+            "@security-checker",
+            "@test"
         ]
     },
     "scripts-descriptions": {
