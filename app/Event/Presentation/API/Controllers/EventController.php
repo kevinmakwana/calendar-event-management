@@ -10,6 +10,7 @@ use App\Event\Presentation\API\Requests\IndexEventRequest;
 use App\Event\Presentation\API\Requests\UpdateEventRequest;
 use App\Event\Presentation\API\Resources\Event;
 use App\Event\Presentation\API\Resources\EventCollection;
+use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -55,6 +56,7 @@ class EventController extends Controller
     {
         try {
             $event = $this->service->createEvent($request->validated());
+
             return Response::apiResponse(new Event($event), 'Event created successfully.', 201);
         } catch (ValidationException $e) {
             return response()->json([
@@ -77,6 +79,7 @@ class EventController extends Controller
         try {
             $event = $this->service->getUserEventByIds($id, $user);
             $this->service->updateEvent($event, $request->validated());
+
             return Response::apiResponse(new Event($event->fresh()), 'Event updated successfully.');
         } catch (ModelNotFoundException $e) {
             return Response::apiResponse(null, 'Event not found.', 404);
@@ -103,10 +106,11 @@ class EventController extends Controller
         try {
             $event = $this->service->getUserEventByIds($id, $user);
             $this->service->deleteEvent($event, $deleteSubsequent);
+
             return Response::apiResponse(null, 'Event deleted successfully.', 204);
         } catch (ModelNotFoundException $e) {
             return Response::apiResponse(null, 'Event not found.', 404);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return Response::apiResponse(null, $e->getMessage(), 400);
         }
     }

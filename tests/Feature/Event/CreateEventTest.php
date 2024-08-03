@@ -171,7 +171,7 @@ test('user gets validation error when creating event with overlapping times', fu
         'frequency' => null,
         'repeat_until' => null,
     ]);
-    
+
     $response->assertStatus(422)
         ->assertJson([
             'message' => 'The start time & end time overlaps with another event.',

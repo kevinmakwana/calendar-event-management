@@ -8,7 +8,6 @@ use App\Event\Domain\Interfaces\EventRepositoryInterface;
 use App\Event\Domain\Models\Event;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
-use DateInterval;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
@@ -22,8 +21,6 @@ class EventService
     /**
      * Create a new event, handling recurrence if applicable.
      *
-     * @param array $data
-     * @return Event
      * @throws ValidationException
      */
     public function createEvent(array $data): Event
@@ -82,9 +79,6 @@ class EventService
     /**
      * Retrieve a user event by its ID and the user ID.
      *
-     * @param int $id
-     * @param int $userId
-     * @return Event
      * @throws ModelNotFoundException
      */
     public function getUserEventByIds(int $id, int $userId): Event
@@ -99,10 +93,6 @@ class EventService
 
     /**
      * Update an existing event and its recurring instances.
-     *
-     * @param Event $event
-     * @param array $data
-     * @return bool
      */
     public function updateEvent(Event $event, array $data): bool
     {
@@ -148,10 +138,6 @@ class EventService
 
     /**
      * Delete an event and optionally delete its subsequent occurrences.
-     *
-     * @param Event $event
-     * @param bool $deleteSubsequent
-     * @return void
      */
     public function deleteEvent(Event $event, bool $deleteSubsequent): void
     {
@@ -165,12 +151,6 @@ class EventService
 
     /**
      * Retrieve user events within a date range, paginated.
-     *
-     * @param int $userId
-     * @param string $start
-     * @param string $end
-     * @param int $perPage
-     * @return LengthAwarePaginator
      */
     public function getUserEventsInRangePaginated(int $userId, string $start, string $end, int $perPage = 15): LengthAwarePaginator
     {
@@ -179,10 +159,6 @@ class EventService
 
     /**
      * Retrieve all user events, paginated.
-     *
-     * @param int $userId
-     * @param int $perPage
-     * @return LengthAwarePaginator
      */
     public function getUserAllEventsPaginated(int $userId, int $perPage = 15): LengthAwarePaginator
     {
@@ -192,8 +168,6 @@ class EventService
     /**
      * Convert a value to a Carbon instance.
      *
-     * @param mixed $value
-     * @return Carbon
      * @throws InvalidArgumentException
      */
     private function convertToCarbon(mixed $value): Carbon
@@ -211,10 +185,7 @@ class EventService
     /**
      * Validate recurrence parameters.
      *
-     * @param Carbon $end
-     * @param string $frequency
      * @param ?Carbon $repeatUntil
-     * @return void
      * @throws ValidationException
      */
     protected function validateRecurrence(Carbon $end, string $frequency, ?Carbon $repeatUntil): void
@@ -231,9 +202,6 @@ class EventService
     /**
      * Get the next occurrence date based on frequency.
      *
-     * @param Carbon $currentStart
-     * @param string $frequency
-     * @return Carbon
      * @throws InvalidArgumentException
      */
     public function getNextOccurrence(Carbon $currentStart, string $frequency): Carbon
@@ -241,22 +209,24 @@ class EventService
         switch ($frequency) {
             case 'daily':
                 return $currentStart->addDay();
+
             case 'weekly':
                 return $currentStart->addWeek();
+
             case 'monthly':
                 return $currentStart->addMonth();
+
             case 'yearly':
                 return $currentStart->addYear();
+
             default:
-                throw new InvalidArgumentException("Invalid frequency: $frequency");
+                throw new InvalidArgumentException("Invalid frequency: {$frequency}");
         }
     }
 
     /**
      * Get the interval for the frequency.
      *
-     * @param string $frequency
-     * @return CarbonInterval
      * @throws InvalidArgumentException
      */
     public function getFrequencyInterval(string $frequency): CarbonInterval
@@ -264,14 +234,18 @@ class EventService
         switch ($frequency) {
             case 'daily':
                 return CarbonInterval::day();
+
             case 'weekly':
                 return CarbonInterval::week();
+
             case 'monthly':
                 return CarbonInterval::month();
+
             case 'yearly':
                 return CarbonInterval::year();
+
             default:
-                throw new InvalidArgumentException("Invalid frequency: $frequency");
+                throw new InvalidArgumentException("Invalid frequency: {$frequency}");
         }
     }
 }
