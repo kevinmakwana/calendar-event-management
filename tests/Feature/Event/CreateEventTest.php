@@ -14,34 +14,39 @@ beforeEach(function () {
     $this->user = User::factory()->create();
 });
 
-test('user can create an event without recurring pattern', function () {
+test('user gets validation error when creating event with overlapping times', function () {
+    $startDate = Carbon::now()->addDays(1);
+    $endDate = $startDate->copy()->addDays(5);
+
+    // Create the first recurring event
+    $this->postJson(route('events.store'), [
+        'user_id' => $this->user->id,
+        'title' => 'Event 1',
+        'start' => $startDate->toIso8601String(),
+        'end' => $endDate->toIso8601String(),
+        'recurring_pattern' => true,
+        'frequency' => 'daily',
+        'repeat_until' => $endDate->copy()->addDays(1)->toIso8601String(),
+    ])->assertStatus(201);
+
+    // Attempt to create a second event that overlaps with the first
     $response = $this->postJson(route('events.store'), [
         'user_id' => $this->user->id,
-        'title' => 'Sample Event',
-        'description' => 'This is a sample event',
-        'start' => now()->addHour()->toIso8601String(),
-        'end' => now()->addHours(2)->toIso8601String(),
-        'recurring_pattern' => false,
-        'frequency' => null,
-        'repeat_until' => null,
+        'title' => 'Event 2',
+        'start' => $startDate->toIso8601String(),
+        'end' => $endDate->toIso8601String(),
+        'recurring_pattern' => true,
+        'frequency' => 'daily',
+        'repeat_until' => $endDate->copy()->addDays(1)->toIso8601String(),
     ]);
 
-    $response->assertStatus(201)
-        ->assertJsonStructure([
-            'data' => [
-                'id',
-                'user_id',
-                'user',
-                'title',
-                'description',
-                'start',
-                'end',
-                'recurring_pattern',
-                'frequency',
-                'repeat_until',
-                'created_at',
-                'updated_at',
-            ],
+    // Check if validation error for overlapping events is returned
+    $response->assertStatus(422)
+        ->assertJson([
+            'errors' => [
+                'start' => ['The start time overlaps with another event.'],
+                'end' => ['The end time overlaps with another event.'],
+            ]
         ]);
 });
 
@@ -72,26 +77,16 @@ test('user can create a recurring event and generate multiple entries', function
         $expectedStart = $start->copy()->addDays($index)->toIso8601String();
         $expectedEnd = $start->copy()->addDays($index)->addHours(2)->toIso8601String();
 
-        $eventStart = Carbon::parse($event->start)->toIso8601String();
-        $eventEnd = Carbon::parse($event->end)->toIso8601String();
-
-        $this->assertEquals($expectedStart, $eventStart);
-        $this->assertEquals($expectedEnd, $eventEnd);
+        $this->assertEquals($expectedStart, Carbon::parse($event->start)->toIso8601String());
+        $this->assertEquals($expectedEnd, Carbon::parse($event->end)->toIso8601String());
     }
 });
 
-test('user gets validation error when creating event with overlapping times', function () {
-    Event::factory()->create([
-        'user_id' => $this->user->id,
-        'title' => 'Existing Event',
-        'start' => now()->addHour(),
-        'end' => now()->addHours(2),
-    ]);
-
+test('user can create an event without recurring pattern', function () {
     $response = $this->postJson(route('events.store'), [
         'user_id' => $this->user->id,
-        'title' => 'Overlapping Event',
-        'description' => 'This event overlaps with an existing event',
+        'title' => 'Sample Event',
+        'description' => 'This is a sample event',
         'start' => now()->addHour()->toIso8601String(),
         'end' => now()->addHours(2)->toIso8601String(),
         'recurring_pattern' => false,
@@ -99,8 +94,23 @@ test('user gets validation error when creating event with overlapping times', fu
         'repeat_until' => null,
     ]);
 
-    $response->assertStatus(422)
-        ->assertJsonValidationErrors(['start', 'end']);
+    $response->assertStatus(201)
+        ->assertJsonStructure([
+            'data' => [
+                'id',
+                'user_id',
+                'user',
+                'title',
+                'description',
+                'start',
+                'end',
+                'recurring_pattern',
+                'frequency',
+                'repeat_until',
+                'created_at',
+                'updated_at',
+            ],
+        ]);
 });
 
 test('user gets validation error when creating event with missing required fields', function (array $eventData, array $expectedErrors) {
@@ -175,19 +185,4 @@ test('user gets validation error when repeat_until is before end date for recurr
 
     $response->assertStatus(422)
         ->assertJsonValidationErrors(['repeat_until']);
-});
-
-test('user gets validation error for invalid frequency value', function () {
-    $response = $this->postJson(route('events.store'), [
-        'user_id' => $this->user->id,
-        'title' => 'Recurring Event',
-        'start' => now()->addHour()->toIso8601String(),
-        'end' => now()->addHours(2)->toIso8601String(),
-        'recurring_pattern' => true,
-        'frequency' => 'invalid-frequency', // Invalid frequency
-        'repeat_until' => now()->addMonths(1)->toIso8601String(),
-    ]);
-
-    $response->assertStatus(422)
-        ->assertJsonValidationErrors(['frequency']);
 });

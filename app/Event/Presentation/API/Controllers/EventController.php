@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Response;
 
 class EventController extends Controller
 {
@@ -28,7 +30,7 @@ class EventController extends Controller
      * Get a list of events within the specified range.
      *
      * @param IndexEventRequest $request the HTTP request instance
-     * @return JsonResponse a JSON response containing the list of events
+     * @return EventCollection a JSON response containing the list of events
      */
     public function index(IndexEventRequest $request): EventCollection
     {
@@ -36,13 +38,9 @@ class EventController extends Controller
         $userId = (int) $validated['user_id'];
         $perPage = (int) $request->input('per_page', 15);
 
-        if (isset($validated['start'], $validated['end'])) {
-            $events = $this->service->getUserEventsInRangePaginated($userId, $validated['start'], $validated['end'], $perPage);
-
-            return new EventCollection($events);
-        }
-
-        $events = $this->service->getUserAllEventsPaginated($userId, $perPage);
+        $events = isset($validated['start'], $validated['end'])
+            ? $this->service->getUserEventsInRangePaginated($userId, $validated['start'], $validated['end'], $perPage)
+            : $this->service->getUserAllEventsPaginated($userId, $perPage);
 
         return new EventCollection($events);
     }
@@ -56,8 +54,7 @@ class EventController extends Controller
     public function store(CreateEventRequest $request): JsonResponse
     {
         $event = $this->service->createEvent($request->validated());
-
-        return response()->apiResponse(new Event($event), 'Event created successfully.', 201);
+        return Response::apiResponse(new Event($event), 'Event created successfully.', 201);
     }
 
     /**
@@ -73,10 +70,13 @@ class EventController extends Controller
         try {
             $event = $this->service->getUserEventByIds($id, $user);
             $this->service->updateEvent($event, $request->validated());
-
-            return response()->apiResponse(new Event($event->fresh()), 'Event updated successfully.');
+            return Response::apiResponse(new Event($event->fresh()), 'Event updated successfully.');
         } catch (ModelNotFoundException $e) {
-            return response()->apiResponse(null, 'Event not found.', 404);
+            Log::error('Event not found: ', ['error' => $e->getMessage()]);
+            return Response::apiResponse(null, 'Event not found.', 404);
+        } catch (\Exception $e) {
+            Log::error('Error updating event: ', ['error' => $e->getMessage()]);
+            return Response::apiResponse(null, $e->getMessage(), 400);
         }
     }
 
@@ -95,10 +95,13 @@ class EventController extends Controller
         try {
             $event = $this->service->getUserEventByIds($id, $user);
             $this->service->deleteEvent($event, $deleteSubsequent);
-
-            return response()->apiResponse(null, 'Event deleted successfully.', 204);
+            return Response::apiResponse(null, 'Event deleted successfully.', 204);
         } catch (ModelNotFoundException $e) {
-            return response()->apiResponse(null, $e->getMessage(), 404);
+            Log::error('Event not found: ', ['error' => $e->getMessage()]);
+            return Response::apiResponse(null, $e->getMessage(), 404);
+        } catch (\Exception $e) {
+            Log::error('Error deleting event: ', ['error' => $e->getMessage()]);
+            return Response::apiResponse(null, $e->getMessage(), 400);
         }
     }
 }

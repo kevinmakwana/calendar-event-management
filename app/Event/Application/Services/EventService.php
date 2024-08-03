@@ -61,7 +61,7 @@ class EventService
             $parentId = null;
 
             while (!$repeatUntil || $currentStart->lessThanOrEqualTo($repeatUntil)) {
-                $this->validateOverlap($currentStart, $initialEnd);
+                $this->repository->checkOverlap($currentStart, $initialEnd);
 
                 $eventData = array_merge($data, [
                     'start' => $currentStart,
@@ -84,7 +84,7 @@ class EventService
         }
 
         // For non-recurring events
-        $this->validateOverlap($start, $end);
+        $this->repository->checkOverlap($start, $end);
 
         return $this->repository->create($data);
     }
@@ -119,7 +119,7 @@ class EventService
             $end = $this->convertToCarbon($data['end']);
             $repeatUntil = isset($data['repeat_until']) ? $this->convertToCarbon($data['repeat_until']) : $event->repeat_until;
 
-            $this->validateOverlap($start, $end, $event->id);
+            $this->repository->checkOverlap($start, $end, $event->id);
 
             $recurringPattern = $data['recurring_pattern'] ?? $event->recurring_pattern;
             $frequency = $data['frequency'] ?? $event->recurring_pattern;
@@ -184,37 +184,6 @@ class EventService
     public function getUserAllEventsPaginated(int $userId, int $perPage = 15): LengthAwarePaginator
     {
         return $this->repository->getUserAllEventsPaginated($userId, $perPage);
-    }
-
-    /**
-     * Validate event overlap.
-     *
-     * @throws ValidationException
-     * @throws InvalidArgumentException
-     */
-    protected function validateOverlap(Carbon|string $start, Carbon|string $end, ?int $excludeEventId = null): void
-    {
-        // Ensure $start and $end are Carbon instances
-        $start = $this->convertToCarbon($start);
-        $end = $this->convertToCarbon($end);
-
-        $overlappingEvent = Event::where(function ($query) use ($start, $end) {
-            $query->whereBetween('start', [$start, $end])
-                ->orWhereBetween('end', [$start, $end])
-                ->orWhere(function ($query) use ($start, $end) {
-                    $query->where('start', '<', $start)
-                        ->where('end', '>', $end);
-                });
-        })->when($excludeEventId, function ($query) use ($excludeEventId) {
-            $query->where('id', '!=', $excludeEventId);
-        })->exists();
-
-        if ($overlappingEvent) {
-            throw ValidationException::withMessages([
-                'start' => 'The start time overlaps with another event.',
-                'end' => 'The end time overlaps with another event.',
-            ]);
-        }
     }
 
     /**
