@@ -152,7 +152,6 @@ test('events with overlapping recurring occurrences are not allowed', function (
         ]);
 });
 
-
 test('user can create an event without recurring pattern', function () {
     $response = $this->postJson(route('events.store'), [
         'user_id' => $this->user->id,

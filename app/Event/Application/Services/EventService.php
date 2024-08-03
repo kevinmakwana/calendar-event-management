@@ -163,14 +163,14 @@ class EventService
      */
     private function createRecurringEvents(int $eventId, array $data, Carbon $start, Carbon $end): void
     {
-        //dd($data);
+        // dd($data);
         $frequency = $data['frequency'];
         $repeatUntil = $this->convertToCarbon($data['repeat_until'] ?? null);
         $events = [];
 
         $currentStart = $start;
         $initialEnd = $end;
-        //$parentId = null;
+        // $parentId = null;
 
         while (!$repeatUntil || $currentStart->lessThanOrEqualTo($repeatUntil)) {
             $this->repository->checkOverlap($currentStart, $initialEnd, $eventId);
@@ -187,7 +187,7 @@ class EventService
             $initialEnd = $initialEnd->copy()->add($this->getFrequencyInterval($frequency));
         }
 
-        //return $events[0];
+        // return $events[0];
     }
 
     /**
@@ -241,7 +241,7 @@ class EventService
     /**
      * Update recurring events based on the updated event data.
      */
-    private function updateRecurringEvents(int $eventId,array $data, Carbon $start, Carbon $end): void
+    private function updateRecurringEvents(int $eventId, array $data, Carbon $start, Carbon $end): void
     {
         $recurringEvents = $this->repository->findRecurringEvents($eventId);
 
