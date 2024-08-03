@@ -12,7 +12,8 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Exception;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class EventRepository implements EventRepositoryInterface
 {
@@ -37,18 +38,20 @@ class EventRepository implements EventRepositoryInterface
      *
      * @param int $id
      * @param int $userId
-     * @return Event|null
+     * @return Event
+     * @throws ModelNotFoundException
      */
-    public function findEventByIdAndUserId(int $id, int $userId): ?Event
+    public function findEventByIdAndUserId(int $id, int $userId): Event
     {
-        try {
-            return Event::where('id', $id)
-                ->where('user_id', $userId)
-                ->first();
-        } catch (Exception $e) {
-            Log::error('Error finding event by ID and user ID: ' . $e->getMessage(), ['id' => $id, 'user_id' => $userId]);
-            throw $e;
+        $event = Event::where('id', $id)
+            ->where('user_id', $userId)
+            ->first();
+
+        if (!$event) {
+            throw new ModelNotFoundException('Event not found.');
         }
+
+        return $event;
     }
 
     /**
@@ -94,7 +97,8 @@ class EventRepository implements EventRepositoryInterface
     {
         try {
             return DB::transaction(function () use ($parentId) {
-                return Event::where('parent_id', $parentId)->delete();
+                $deletedRows = Event::where('parent_id', $parentId)->delete();
+                return $deletedRows > 0;
             });
         } catch (Exception $e) {
             Log::error('Error deleting subsequent events: ' . $e->getMessage(), ['parent_id' => $parentId]);
@@ -178,33 +182,57 @@ class EventRepository implements EventRepositoryInterface
      * @param Carbon $start
      * @param Carbon $end
      * @param int|null $excludeEventId
-     * @return Event|null
+     * @return void
      */
-    public function checkOverlap(Carbon $start, Carbon $end, ?int $excludeEventId = null)
+    public function checkOverlap(Carbon $start, Carbon $end, ?int $excludeEventId = null): void
     {
-        try {
-            $overlappingEvent = Event::where(function ($query) use ($start, $end) {
-                $query->whereBetween('start', [$start, $end])
-                    ->orWhereBetween('end', [$start, $end])
-                    ->orWhere(function ($query) use ($start, $end) {
-                        $query->where('start', '<', $start)
-                            ->where('end', '>', $end);
-                    });
-            })->when($excludeEventId, function ($query) use ($excludeEventId) {
-                        $query->where('id', '!=', $excludeEventId);
-            })->exists();
+        $query = Event::where(function ($query) use ($start, $end) {
+            $query->whereBetween('start', [$start, $end])
+                ->orWhereBetween('end', [$start, $end])
+                ->orWhere(function ($query) use ($start, $end) {
+                    $query->where('start', '<', $start)
+                        ->where('end', '>', $end);
+                });
+        });
 
-            if ($overlappingEvent) {
-                throw ValidationException::withMessages([
-                    'start' => 'The start time overlaps with another event.',
-                    'end' => 'The end time overlaps with another event.',
-                ]);
+        if ($excludeEventId) {
+            $query->where('id', '!=', $excludeEventId);
+        }
+
+        $overlappingEvents = $query->get();
+
+        foreach ($overlappingEvents as $overlappingEvent) {
+            $isOverlapping = $this->isOverlapping($start, $end, $overlappingEvent);
+            if ($isOverlapping) {
+                $message = 'The start time & end time overlaps with another event.';
+                $errors = [
+                    'start' => ['The start time overlaps with another event.'],
+                    'end' => ['The end time overlaps with another event.'],
+                ];
+
+                if ($overlappingEvent->recurring_pattern) {
+                    $message = 'The start time & end time overlaps with a recurring event.';
+                    $errors = [
+                        'start' => ['The start time overlaps with a recurring event.'],
+                        'end' => ['The end time overlaps with a recurring event.'],
+                    ];
+                }
+
+                throw new HttpResponseException(response()->json([
+                    'message' => $message,
+                    'errors' => $errors,
+                ], 422));
             }
-        } catch (Exception $e) {
-            Log::error('Error checking event overlap: ' . $e->getMessage(), ['start' => $start, 'end' => $end, 'excludeEventId' => $excludeEventId]);
-            throw $e;
         }
     }
+
+    private function isOverlapping(Carbon $start, Carbon $end, Event $existingEvent): bool
+    {
+        // Check if the new event overlaps with the existing event's occurrences
+        return $start->lessThanOrEqualTo($existingEvent->end) &&
+            $end->greaterThanOrEqualTo($existingEvent->start);
+    }
+
 
     /**
      * Get events in a date range with pagination for a user.

@@ -66,6 +66,8 @@ class CreateEventRequest extends FormRequest
         return [
             'title.required' => 'The title is required.',
             'start.required' => 'The start date is required.',
+            'start.after_or_equal' => 'The start date must be after or equal to the current date and time.',
+            'end.after_or_equal' => 'The end date must be after or equal to the start date.',
             'end.required' => 'The end date is required.',
             'recurring_pattern.required' => 'The recurring pattern is required.',
             'recurring_pattern.boolean' => 'The recurring pattern must be true or false.',

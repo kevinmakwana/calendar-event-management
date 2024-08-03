@@ -14,8 +14,8 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Validation\ValidationException;
 
 class EventController extends Controller
 {
@@ -53,8 +53,15 @@ class EventController extends Controller
      */
     public function store(CreateEventRequest $request): JsonResponse
     {
-        $event = $this->service->createEvent($request->validated());
-        return Response::apiResponse(new Event($event), 'Event created successfully.', 201);
+        try {
+            $event = $this->service->createEvent($request->validated());
+            return Response::apiResponse(new Event($event), 'Event created successfully.', 201);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'errors' => $e->errors(),
+            ], 422);
+        }
     }
 
     /**
@@ -72,11 +79,12 @@ class EventController extends Controller
             $this->service->updateEvent($event, $request->validated());
             return Response::apiResponse(new Event($event->fresh()), 'Event updated successfully.');
         } catch (ModelNotFoundException $e) {
-            Log::error('Event not found: ', ['error' => $e->getMessage()]);
             return Response::apiResponse(null, 'Event not found.', 404);
-        } catch (\Exception $e) {
-            Log::error('Error updating event: ', ['error' => $e->getMessage()]);
-            return Response::apiResponse(null, $e->getMessage(), 400);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'errors' => $e->errors(),
+            ], 422);
         }
     }
 
@@ -90,17 +98,15 @@ class EventController extends Controller
      */
     public function destroy(Request $request, int $id, int $user): JsonResponse
     {
-        $deleteSubsequent = $request->query('deleteSubsequent', 'false') === 'true';
+        $deleteSubsequent = filter_var($request->query('deleteSubsequent', 'false'), FILTER_VALIDATE_BOOLEAN);
 
         try {
             $event = $this->service->getUserEventByIds($id, $user);
             $this->service->deleteEvent($event, $deleteSubsequent);
             return Response::apiResponse(null, 'Event deleted successfully.', 204);
         } catch (ModelNotFoundException $e) {
-            Log::error('Event not found: ', ['error' => $e->getMessage()]);
-            return Response::apiResponse(null, $e->getMessage(), 404);
+            return Response::apiResponse(null, 'Event not found.', 404);
         } catch (\Exception $e) {
-            Log::error('Error deleting event: ', ['error' => $e->getMessage()]);
             return Response::apiResponse(null, $e->getMessage(), 400);
         }
     }

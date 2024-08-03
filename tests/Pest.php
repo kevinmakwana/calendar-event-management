@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Event\Domain\Models\Event;
+use App\User\Domain\Models\User;
+
 /*
 |--------------------------------------------------------------------------
 | Test Case
@@ -17,3 +20,16 @@ uses(
     Tests\TestCase::class,
     // Illuminate\Foundation\Testing\RefreshDatabase::class,
 )->in('Feature');
+
+/**
+ * Helper method to create an event.
+ */
+function createEvent(User $user, array $attributes = []): Event
+{
+    return Event::factory()->create(array_merge([
+        'user_id' => $user->id,
+        'recurring_pattern' => false,
+        'frequency' => null,
+        'repeat_until' => null,
+    ], $attributes));
+}

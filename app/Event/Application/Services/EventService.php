@@ -7,6 +7,7 @@ namespace App\Event\Application\Services;
 use App\Event\Domain\Interfaces\EventRepositoryInterface;
 use App\Event\Domain\Models\Event;
 use Carbon\Carbon;
+use Carbon\CarbonInterval;
 use DateInterval;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -14,25 +15,16 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
-/**
- * Service class to manage events.
- *
- * @property EventRepositoryInterface $repository
- */
 class EventService
 {
-    /**
-     * EventService constructor.
-     */
     public function __construct(protected EventRepositoryInterface $repository) {}
 
     /**
-     * Create a new event.
+     * Create a new event, handling recurrence if applicable.
      *
-     * @param array<string, mixed> $data
-     *
+     * @param array $data
+     * @return Event
      * @throws ValidationException
-     * @throws InvalidArgumentException
      */
     public function createEvent(array $data): Event
     {
@@ -41,9 +33,7 @@ class EventService
 
         // Validate the event duration
         if ($end->lessThanOrEqualTo($start)) {
-            throw ValidationException::withMessages([
-                'end' => 'The end time must be a date after the start time.',
-            ]);
+            throw ValidationException::withMessages(['end' => 'The end time must be a date after the start time.']);
         }
 
         // Handle recurring events
@@ -57,7 +47,7 @@ class EventService
             // Generate recurring events
             $events = [];
             $currentStart = $start;
-            $initialEnd = $end; // Keep the initial end time for each occurrence
+            $initialEnd = $end;
             $parentId = null;
 
             while (!$repeatUntil || $currentStart->lessThanOrEqualTo($repeatUntil)) {
@@ -90,13 +80,16 @@ class EventService
     }
 
     /**
-     * Get an event by ID and user ID.
+     * Retrieve a user event by its ID and the user ID.
      *
+     * @param int $id
+     * @param int $userId
+     * @return Event
      * @throws ModelNotFoundException
      */
     public function getUserEventByIds(int $id, int $userId): Event
     {
-        $event = $this->repository->findUserEvent($id, $userId);
+        $event = $this->repository->findEventByIdAndUserId($id, $userId);
         if (!$event) {
             throw new ModelNotFoundException('Event not found.');
         }
@@ -105,38 +98,34 @@ class EventService
     }
 
     /**
-     * Update an event.
+     * Update an existing event and its recurring instances.
      *
-     * @param array<string, mixed> $data
-     *
-     * @throws ValidationException
-     * @throws InvalidArgumentException
+     * @param Event $event
+     * @param array $data
+     * @return bool
      */
     public function updateEvent(Event $event, array $data): bool
     {
-        DB::transaction(function () use ($event, $data) {
+        return DB::transaction(function () use ($event, $data) {
             $start = $this->convertToCarbon($data['start']);
             $end = $this->convertToCarbon($data['end']);
-            $repeatUntil = isset($data['repeat_until']) ? $this->convertToCarbon($data['repeat_until']) : $event->repeat_until;
+            $repeatUntil = $data['repeat_until'] ? $this->convertToCarbon($data['repeat_until']) : $event->repeat_until;
 
             $this->repository->checkOverlap($start, $end, $event->id);
-
-            $recurringPattern = $data['recurring_pattern'] ?? $event->recurring_pattern;
-            $frequency = $data['frequency'] ?? $event->recurring_pattern;
 
             $event->update([
                 'title' => $data['title'],
                 'description' => $data['description'] ?? $event->description,
                 'start' => $start,
                 'end' => $end,
-                'recurring_pattern' => $recurringPattern,
-                'frequency' => $frequency,
+                'recurring_pattern' => $data['recurring_pattern'] ?? $event->recurring_pattern,
+                'frequency' => $data['frequency'] ?? $event->frequency,
                 'repeat_until' => $repeatUntil,
             ]);
 
             // Update recurring events if applicable
-            if ($recurringPattern) {
-                $recurringEvents = Event::where('parent_id', $event->id)->orWhere('id', $event->id)->get();
+            if ($event->recurring_pattern) {
+                $recurringEvents = $this->repository->findRecurringEvents($event->id);
 
                 foreach ($recurringEvents as $recurringEvent) {
                     if ($recurringEvent->id !== $event->id) {
@@ -152,13 +141,17 @@ class EventService
                     }
                 }
             }
-        });
 
-        return true;
+            return true;
+        });
     }
 
     /**
-     * Delete an event.
+     * Delete an event and optionally delete its subsequent occurrences.
+     *
+     * @param Event $event
+     * @param bool $deleteSubsequent
+     * @return void
      */
     public function deleteEvent(Event $event, bool $deleteSubsequent): void
     {
@@ -171,7 +164,13 @@ class EventService
     }
 
     /**
-     * Get events in a date range with pagination.
+     * Retrieve user events within a date range, paginated.
+     *
+     * @param int $userId
+     * @param string $start
+     * @param string $end
+     * @param int $perPage
+     * @return LengthAwarePaginator
      */
     public function getUserEventsInRangePaginated(int $userId, string $start, string $end, int $perPage = 15): LengthAwarePaginator
     {
@@ -179,7 +178,11 @@ class EventService
     }
 
     /**
-     * Get all events with pagination.
+     * Retrieve all user events, paginated.
+     *
+     * @param int $userId
+     * @param int $perPage
+     * @return LengthAwarePaginator
      */
     public function getUserAllEventsPaginated(int $userId, int $perPage = 15): LengthAwarePaginator
     {
@@ -187,8 +190,10 @@ class EventService
     }
 
     /**
-     * Convert value to Carbon instance.
+     * Convert a value to a Carbon instance.
      *
+     * @param mixed $value
+     * @return Carbon
      * @throws InvalidArgumentException
      */
     private function convertToCarbon(mixed $value): Carbon
@@ -204,72 +209,69 @@ class EventService
     }
 
     /**
-     * Validate recurrence details.
+     * Validate recurrence parameters.
      *
+     * @param Carbon $end
+     * @param string $frequency
+     * @param ?Carbon $repeatUntil
+     * @return void
      * @throws ValidationException
      */
     protected function validateRecurrence(Carbon $end, string $frequency, ?Carbon $repeatUntil): void
     {
         if (!in_array($frequency, ['daily', 'weekly', 'monthly', 'yearly'])) {
-            throw ValidationException::withMessages([
-                'frequency' => 'The frequency must be daily, weekly, monthly, or yearly.',
-            ]);
+            throw ValidationException::withMessages(['frequency' => 'The frequency must be daily, weekly, monthly, or yearly.']);
         }
 
         if ($repeatUntil && $repeatUntil->lessThan($end)) {
-            throw ValidationException::withMessages([
-                'repeat_until' => 'The repeat_until date must be after the end date.',
-            ]);
+            throw ValidationException::withMessages(['repeat_until' => 'The repeat_until date must be after the end date.']);
         }
     }
 
     /**
-     * Get the next occurrence based on frequency.
+     * Get the next occurrence date based on frequency.
      *
+     * @param Carbon $currentStart
+     * @param string $frequency
+     * @return Carbon
      * @throws InvalidArgumentException
      */
-    private function getNextOccurrence(Carbon $currentStart, string $frequency): Carbon
+    public function getNextOccurrence(Carbon $currentStart, string $frequency): Carbon
     {
         switch ($frequency) {
             case 'daily':
                 return $currentStart->addDay();
-
             case 'weekly':
                 return $currentStart->addWeek();
-
             case 'monthly':
                 return $currentStart->addMonth();
-
             case 'yearly':
                 return $currentStart->addYear();
-
             default:
-                throw new InvalidArgumentException('Invalid occurrence frequency.');
+                throw new InvalidArgumentException("Invalid frequency: $frequency");
         }
     }
 
     /**
-     * Get the frequency interval.
+     * Get the interval for the frequency.
      *
+     * @param string $frequency
+     * @return CarbonInterval
      * @throws InvalidArgumentException
      */
-    private function getFrequencyInterval(string $frequency): DateInterval
+    public function getFrequencyInterval(string $frequency): CarbonInterval
     {
         switch ($frequency) {
             case 'daily':
-                return new DateInterval('P1D'); // 1 day
-
+                return CarbonInterval::day();
             case 'weekly':
-                return new DateInterval('P1W'); // 1 week
-
+                return CarbonInterval::week();
             case 'monthly':
-                return new DateInterval('P1M'); // 1 month
-
+                return CarbonInterval::month();
             case 'yearly':
-                return new DateInterval('P1Y'); // 1 year
-
+                return CarbonInterval::year();
             default:
-                throw new InvalidArgumentException('Invalid frequency.');
+                throw new InvalidArgumentException("Invalid frequency: $frequency");
         }
     }
 }
