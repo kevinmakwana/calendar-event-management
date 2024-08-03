@@ -16,7 +16,7 @@ use InvalidArgumentException;
 
 class EventService
 {
-    public function __construct(protected EventRepositoryInterface $repository) {}
+    public function __construct(private EventRepositoryInterface $repository) {}
 
     /**
      * Create a new event, handling recurrence if applicable.
@@ -29,45 +29,12 @@ class EventService
         $end = $this->convertToCarbon($data['end']);
 
         // Validate the event duration
-        if ($end->lessThanOrEqualTo($start)) {
-            throw ValidationException::withMessages(['end' => 'The end time must be a date after the start time.']);
-        }
+        $this->validateEventDuration($start, $end);
 
         // Handle recurring events
-        if (isset($data['recurring_pattern']) && $data['recurring_pattern']) {
-            $frequency = $data['frequency'];
-            $repeatUntil = $data['repeat_until'] ? $this->convertToCarbon($data['repeat_until']) : null;
-
-            // Validate recurrence details
-            $this->validateRecurrence($end, $frequency, $repeatUntil);
-
-            // Generate recurring events
-            $events = [];
-            $currentStart = $start;
-            $initialEnd = $end;
-            $parentId = null;
-
-            while (!$repeatUntil || $currentStart->lessThanOrEqualTo($repeatUntil)) {
-                $this->repository->checkOverlap($currentStart, $initialEnd);
-
-                $eventData = array_merge($data, [
-                    'start' => $currentStart,
-                    'end' => $initialEnd,
-                    'parent_id' => $parentId,
-                ]);
-
-                $event = $this->repository->create($eventData);
-                $events[] = $event;
-
-                // Move to the next occurrence
-                $currentStart = $this->getNextOccurrence($currentStart, $frequency);
-
-                // Update end time based on frequency interval
-                $initialEnd = $initialEnd->copy()->add($this->getFrequencyInterval($frequency));
-            }
-
-            // Return the first event as the reference
-            return $events[0];
+        if (!empty($data['recurring_pattern'])) {
+            $this->validateRecurrence($end, $data['frequency'], $this->convertToCarbon($data['repeat_until'] ?? null));
+            return $this->createRecurringEvents($data, $start, $end);
         }
 
         // For non-recurring events
@@ -77,7 +44,7 @@ class EventService
     }
 
     /**
-     * Retrieve a user event by its ID and the user ID.
+     * Retrieve a user event by its ID and user ID.
      *
      * @throws ModelNotFoundException
      */
@@ -103,33 +70,11 @@ class EventService
 
             $this->repository->checkOverlap($start, $end, $event->id);
 
-            $event->update([
-                'title' => $data['title'],
-                'description' => $data['description'] ?? $event->description,
-                'start' => $start,
-                'end' => $end,
-                'recurring_pattern' => $data['recurring_pattern'] ?? $event->recurring_pattern,
-                'frequency' => $data['frequency'] ?? $event->frequency,
-                'repeat_until' => $repeatUntil,
-            ]);
+            $event->update($this->getEventUpdateData($data, $start, $end, $repeatUntil));
 
             // Update recurring events if applicable
             if ($event->recurring_pattern) {
-                $recurringEvents = $this->repository->findRecurringEvents($event->id);
-
-                foreach ($recurringEvents as $recurringEvent) {
-                    if ($recurringEvent->id !== $event->id) {
-                        $recurringEvent->update([
-                            'title' => $data['title'],
-                            'description' => $data['description'] ?? $recurringEvent->description,
-                            'start' => $start,
-                            'end' => $end,
-                            'recurring_pattern' => false,
-                            'frequency' => null,
-                            'repeat_until' => null,
-                        ]);
-                    }
-                }
+                $this->updateRecurringEvents($event->id, $data, $start, $end);
             }
 
             return true;
@@ -175,6 +120,7 @@ class EventService
         if ($value instanceof Carbon) {
             return $value;
         }
+
         if (is_string($value)) {
             return Carbon::parse($value);
         }
@@ -183,12 +129,24 @@ class EventService
     }
 
     /**
+     * Validate event duration.
+     *
+     * @throws ValidationException
+     */
+    private function validateEventDuration(Carbon $start, Carbon $end): void
+    {
+        if ($end->lessThanOrEqualTo($start)) {
+            throw ValidationException::withMessages(['end' => 'The end time must be a date after the start time.']);
+        }
+    }
+
+    /**
      * Validate recurrence parameters.
      *
      * @param ?Carbon $repeatUntil
      * @throws ValidationException
      */
-    protected function validateRecurrence(Carbon $end, string $frequency, ?Carbon $repeatUntil): void
+    private function validateRecurrence(Carbon $end, string $frequency, ?Carbon $repeatUntil): void
     {
         if (!in_array($frequency, ['daily', 'weekly', 'monthly', 'yearly'])) {
             throw ValidationException::withMessages(['frequency' => 'The frequency must be daily, weekly, monthly, or yearly.']);
@@ -200,28 +158,51 @@ class EventService
     }
 
     /**
+     * Create recurring events based on the given data.
+     */
+    private function createRecurringEvents(array $data, Carbon $start, Carbon $end): Event
+    {
+        $frequency = $data['frequency'];
+        $repeatUntil = $this->convertToCarbon($data['repeat_until'] ?? null);
+        $events = [];
+
+        $currentStart = $start;
+        $initialEnd = $end;
+        $parentId = null;
+
+        while (!$repeatUntil || $currentStart->lessThanOrEqualTo($repeatUntil)) {
+            $this->repository->checkOverlap($currentStart, $initialEnd);
+
+            $eventData = array_merge($data, [
+                'start' => $currentStart,
+                'end' => $initialEnd,
+                'parent_id' => $parentId,
+            ]);
+
+            $event = $this->repository->create($eventData);
+            $events[] = $event;
+
+            $currentStart = $this->getNextOccurrence($currentStart, $frequency);
+            $initialEnd = $initialEnd->copy()->add($this->getFrequencyInterval($frequency));
+        }
+
+        return $events[0];
+    }
+
+    /**
      * Get the next occurrence date based on frequency.
      *
      * @throws InvalidArgumentException
      */
-    public function getNextOccurrence(Carbon $currentStart, string $frequency): Carbon
+    private function getNextOccurrence(Carbon $currentStart, string $frequency): Carbon
     {
-        switch ($frequency) {
-            case 'daily':
-                return $currentStart->addDay();
-
-            case 'weekly':
-                return $currentStart->addWeek();
-
-            case 'monthly':
-                return $currentStart->addMonth();
-
-            case 'yearly':
-                return $currentStart->addYear();
-
-            default:
-                throw new InvalidArgumentException("Invalid frequency: {$frequency}");
-        }
+        return match ($frequency) {
+            'daily' => $currentStart->addDay(),
+            'weekly' => $currentStart->addWeek(),
+            'monthly' => $currentStart->addMonth(),
+            'yearly' => $currentStart->addYear(),
+            default => throw new InvalidArgumentException("Invalid frequency: {$frequency}"),
+        };
     }
 
     /**
@@ -229,23 +210,52 @@ class EventService
      *
      * @throws InvalidArgumentException
      */
-    public function getFrequencyInterval(string $frequency): CarbonInterval
+    private function getFrequencyInterval(string $frequency): CarbonInterval
     {
-        switch ($frequency) {
-            case 'daily':
-                return CarbonInterval::day();
+        return match ($frequency) {
+            'daily' => CarbonInterval::day(),
+            'weekly' => CarbonInterval::week(),
+            'monthly' => CarbonInterval::month(),
+            'yearly' => CarbonInterval::year(),
+            default => throw new InvalidArgumentException("Invalid frequency: {$frequency}"),
+        };
+    }
 
-            case 'weekly':
-                return CarbonInterval::week();
+    /**
+     * Get the data for updating an event.
+     */
+    private function getEventUpdateData(array $data, Carbon $start, Carbon $end, ?Carbon $repeatUntil): array
+    {
+        return [
+            'title' => $data['title'],
+            'description' => $data['description'] ?? null,
+            'start' => $start,
+            'end' => $end,
+            'recurring_pattern' => $data['recurring_pattern'] ?? false,
+            'frequency' => $data['frequency'] ?? null,
+            'repeat_until' => $repeatUntil,
+        ];
+    }
 
-            case 'monthly':
-                return CarbonInterval::month();
+    /**
+     * Update recurring events based on the updated event data.
+     */
+    private function updateRecurringEvents(int $eventId,array $data, Carbon $start, Carbon $end): void
+    {
+        $recurringEvents = $this->repository->findRecurringEvents($eventId);
 
-            case 'yearly':
-                return CarbonInterval::year();
-
-            default:
-                throw new InvalidArgumentException("Invalid frequency: {$frequency}");
+        foreach ($recurringEvents as $recurringEvent) {
+            if ($recurringEvent->id !== $eventId) {
+                $recurringEvent->update([
+                    'title' => $data['title'],
+                    'description' => $data['description'] ?? $recurringEvent->description,
+                    'start' => $start,
+                    'end' => $end,
+                    'recurring_pattern' => false,
+                    'frequency' => null,
+                    'repeat_until' => null,
+                ]);
+            }
         }
     }
 }

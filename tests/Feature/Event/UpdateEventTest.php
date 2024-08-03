@@ -100,7 +100,7 @@ test('user can update all recurring events', function () {
     );
 
     $response->assertStatus(200);
-
+    //dd(Event::find($event->id)->toArray(), $this->user->id);
     expect(Event::find($event->id))->toMatchArray([
         'user_id' => $this->user->id,
         'start' => $newStart,
@@ -109,7 +109,7 @@ test('user can update all recurring events', function () {
         'frequency' => 'weekly',
         'repeat_until' => $newRepeatUntil,
     ]);
-
+    
     expect(Event::find($recurringEvent1->id))->toMatchArray([
         'user_id' => $this->user->id,
         'parent_id' => $event->id,
