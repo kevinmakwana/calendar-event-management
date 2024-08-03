@@ -214,10 +214,12 @@ class EventRepository implements EventRepositoryInterface
         }
 
         $overlappingEvents = $query->get();
-
-        foreach ($overlappingEvents as $overlappingEvent) {
-            if ($this->isOverlapping($start, $end, $overlappingEvent)) {
-                $this->handleOverlap($overlappingEvent);
+        
+        if($overlappingEvents->count() > 0){
+            foreach ($overlappingEvents as $overlappingEvent) {
+                if ($this->isOverlapping($start, $end, $overlappingEvent)) {
+                    $this->handleOverlap($overlappingEvent);
+                }
             }
         }
     }

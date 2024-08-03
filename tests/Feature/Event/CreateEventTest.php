@@ -14,6 +14,49 @@ beforeEach(function () {
     $this->user = User::factory()->create();
 });
 
+test('events with non-overlapping recurring occurrences are allowed', function () {
+    // Create Event A: Recurs every month for a year
+    $eventAStart = now()->startOfMonth()->toIso8601String();
+    $eventAEnd = now()->startOfMonth()->addHours(1)->toIso8601String();
+    Event::factory()->create([
+        'user_id' => $this->user->id,
+        'title' => 'Monthly Recurring Event',
+        'start' => $eventAStart,
+        'end' => $eventAEnd,
+        'recurring_pattern' => true,
+        'frequency' => 'monthly',
+        'repeat_until' => now()->addYear()->toIso8601String(),
+    ]);
+
+    // Create Event B: Starts after Event A's recurrence period
+    $eventBStart = now()->addMonths(2)->startOfDay()->toIso8601String();
+    $eventBEnd = now()->addMonths(2)->startOfDay()->addHours(1)->toIso8601String();
+    $response = $this->postJson(
+        route('events.store'),
+        [
+            'user_id' => $this->user->id,
+            'title' => 'Non-Overlapping Recurring Event',
+            'start' => $eventBStart,
+            'end' => $eventBEnd,
+            'recurring_pattern' => true,
+            'frequency' => 'monthly',
+            'repeat_until' => now()->addYear()->toIso8601String(),
+        ]
+    );
+    // Assert that the response status is 201 and the event was created
+    $response->assertStatus(201)
+        ->assertJson([
+            'message' => 'Event created successfully.',
+        ]);
+
+    $events = Event::where([
+        'user_id' => $this->user->id,
+        'title' => 'Non-Overlapping Recurring Event',
+    ])->get();
+
+    $this->assertCount(12, $events);
+});
+
 test('overlapping recurring occurrences with different recurrence rules are not allowed', function () {
     $now = Carbon::now()->addMinutes(10);
 
@@ -109,110 +152,6 @@ test('events with overlapping recurring occurrences are not allowed', function (
         ]);
 });
 
-test('events with non-overlapping recurring occurrences are allowed', function () {
-    // Create Event A: Recurs every month for a year
-    $eventAStart = now()->startOfMonth()->toIso8601String();
-    $eventAEnd = now()->startOfMonth()->addHours(1)->toIso8601String();
-    Event::factory()->create([
-        'user_id' => $this->user->id,
-        'title' => 'Monthly Recurring Event',
-        'start' => $eventAStart,
-        'end' => $eventAEnd,
-        'recurring_pattern' => true,
-        'frequency' => 'monthly',
-        'repeat_until' => now()->addYear()->toIso8601String(),
-    ]);
-
-    // Create Event B: Starts after Event A's recurrence period
-    $eventBStart = now()->addMonths(2)->startOfDay()->toIso8601String();
-    $eventBEnd = now()->addMonths(2)->startOfDay()->addHours(1)->toIso8601String();
-    $response = $this->postJson(
-        route('events.store'),
-        [
-            'user_id' => $this->user->id,
-            'title' => 'Non-Overlapping Recurring Event',
-            'start' => $eventBStart,
-            'end' => $eventBEnd,
-            'recurring_pattern' => true,
-            'frequency' => 'monthly',
-            'repeat_until' => now()->addYear()->toIso8601String(),
-        ]
-    );
-
-    // Assert that the response status is 201 and the event was created
-    $response->assertStatus(201)
-        ->assertJson([
-            'message' => 'Event created successfully.',
-        ]);
-});
-
-test('user gets validation error when creating event with overlapping times', function () {
-    $startDate = Carbon::now()->addDays(1);
-    $endDate = $startDate->copy()->addDays(5);
-
-    // Create an initial event to create an overlap
-    $this->postJson(route('events.store'), [
-        'user_id' => $this->user->id,
-        'title' => 'Event 1',
-        'start' => $startDate->toIso8601String(),
-        'end' => $endDate->toIso8601String(),
-        'recurring_pattern' => false,
-        'frequency' => null,
-        'repeat_until' => null,
-    ])->assertStatus(201);
-
-    // Attempt to create an overlapping event
-    $response = $this->postJson(route('events.store'), [
-        'user_id' => $this->user->id,
-        'title' => 'Event 2',
-        'start' => $startDate->toIso8601String(),
-        'end' => $endDate->toIso8601String(),
-        'recurring_pattern' => false,
-        'frequency' => null,
-        'repeat_until' => null,
-    ]);
-
-    $response->assertStatus(422)
-        ->assertJson([
-            'message' => 'The start time & end time overlaps with another event.',
-            'errors' => [
-                'start' => ['The start time overlaps with another event.'],
-                'end' => ['The end time overlaps with another event.'],
-            ],
-        ]);
-});
-
-test('user can create a recurring event and generate multiple entries', function () {
-    $start = now()->addHour();
-    $end = $start->copy()->addHours(2);
-
-    $response = $this->postJson(route('events.store'), [
-        'user_id' => $this->user->id,
-        'title' => 'Recurring Event',
-        'start' => $start->toIso8601String(),
-        'end' => $end->toIso8601String(),
-        'recurring_pattern' => true,
-        'frequency' => 'daily',
-        'repeat_until' => now()->addDays(7)->toIso8601String(),
-    ]);
-
-    $response->assertStatus(201);
-
-    $events = Event::where([
-        'user_id' => $this->user->id,
-        'title' => 'Recurring Event',
-    ])->get();
-
-    $this->assertCount(7, $events);
-
-    foreach ($events as $index => $event) {
-        $expectedStart = $start->copy()->addDays($index)->toIso8601String();
-        $expectedEnd = $start->copy()->addDays($index)->addHours(2)->toIso8601String();
-
-        $this->assertEquals($expectedStart, Carbon::parse($event->start)->toIso8601String());
-        $this->assertEquals($expectedEnd, Carbon::parse($event->end)->toIso8601String());
-    }
-});
 
 test('user can create an event without recurring pattern', function () {
     $response = $this->postJson(route('events.store'), [

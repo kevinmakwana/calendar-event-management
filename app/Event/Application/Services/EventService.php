@@ -31,16 +31,17 @@ class EventService
         // Validate the event duration
         $this->validateEventDuration($start, $end);
 
+        // For non-recurring events
+        $this->repository->checkOverlap($start, $end);
+        $event = $this->repository->create($data);
+
         // Handle recurring events
         if (!empty($data['recurring_pattern'])) {
             $this->validateRecurrence($end, $data['frequency'], $this->convertToCarbon($data['repeat_until'] ?? null));
-            return $this->createRecurringEvents($data, $start, $end);
+            $this->createRecurringEvents($event->id, $data, $start, $end);
         }
 
-        // For non-recurring events
-        $this->repository->checkOverlap($start, $end);
-
-        return $this->repository->create($data);
+        return $event;
     }
 
     /**
@@ -160,25 +161,25 @@ class EventService
     /**
      * Create recurring events based on the given data.
      */
-    private function createRecurringEvents(array $data, Carbon $start, Carbon $end): Event
+    private function createRecurringEvents(int $eventId, array $data, Carbon $start, Carbon $end): void
     {
+        //dd($data);
         $frequency = $data['frequency'];
         $repeatUntil = $this->convertToCarbon($data['repeat_until'] ?? null);
         $events = [];
 
         $currentStart = $start;
         $initialEnd = $end;
-        $parentId = null;
+        //$parentId = null;
 
         while (!$repeatUntil || $currentStart->lessThanOrEqualTo($repeatUntil)) {
-            $this->repository->checkOverlap($currentStart, $initialEnd);
+            $this->repository->checkOverlap($currentStart, $initialEnd, $eventId);
 
             $eventData = array_merge($data, [
                 'start' => $currentStart,
                 'end' => $initialEnd,
-                'parent_id' => $parentId,
+                'parent_id' => $eventId,
             ]);
-
             $event = $this->repository->create($eventData);
             $events[] = $event;
 
@@ -186,7 +187,7 @@ class EventService
             $initialEnd = $initialEnd->copy()->add($this->getFrequencyInterval($frequency));
         }
 
-        return $events[0];
+        //return $events[0];
     }
 
     /**
