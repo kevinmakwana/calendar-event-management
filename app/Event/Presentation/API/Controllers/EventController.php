@@ -120,6 +120,7 @@ class EventController extends Controller
     {
         try {
             $event = $this->service->createEvent($request->validated());
+
             return Response::apiResponse(new Event($event), 'Event created successfully.', 201);
         } catch (ValidationException $e) {
             return $this->handleValidationException($e);
@@ -176,6 +177,7 @@ class EventController extends Controller
         try {
             $event = $this->service->getUserEventByIds($id, $user);
             $this->service->updateEvent($event, $request->validated());
+
             return Response::apiResponse(new Event($event->fresh()), 'Event updated successfully.');
         } catch (ModelNotFoundException) {
             return Response::apiResponse(null, 'Event not found.', 404);
@@ -236,6 +238,7 @@ class EventController extends Controller
         try {
             $event = $this->service->getUserEventByIds($id, $user);
             $this->service->deleteEvent($event, $deleteSubsequent);
+
             return Response::apiResponse(null, 'Event deleted successfully.', 204);
         } catch (ModelNotFoundException) {
             return Response::apiResponse(null, 'Event not found.', 404);

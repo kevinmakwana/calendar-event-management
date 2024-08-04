@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
+use Rector\Caching\ValueObject\Storage\FileCacheStorage;
 use Rector\Config\RectorConfig;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
-use Rector\Caching\ValueObject\Storage\FileCacheStorage;
 use RectorLaravel\Set\LaravelSetList;
 
 return RectorConfig::configure()
     ->withCache(
-      cacheDirectory: '.rector-cache',
-      cacheClass: FileCacheStorage::class,
+        cacheDirectory: '.rector-cache',
+        cacheClass: FileCacheStorage::class,
     )
     ->withPaths([
-        __DIR__.'/app',
+        __DIR__ . '/app',
         // __DIR__.'/bootstrap',
         // __DIR__.'/config',
         // __DIR__.'/lang',
@@ -30,5 +30,4 @@ return RectorConfig::configure()
         LaravelSetList::LARAVEL_110,
     ])
     ->withRules([
-        // 
     ]);

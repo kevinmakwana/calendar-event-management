@@ -43,7 +43,6 @@
                         base_path('app'),
                         base_path('app/Event/Presentation/API/Controllers'),
                     ],
-
                 ],
             ],
         ],
@@ -122,7 +121,7 @@
                 /**
                  * Custom query path processors classes.
                  *
-                 * @link https://github.com/zircote/swagger-php/tree/master/Examples/processors/schema-query-parameter
+                 * @see https://github.com/zircote/swagger-php/tree/master/Examples/processors/schema-query-parameter
                  * @see \OpenApi\scan
                  */
                 'processors' => [
