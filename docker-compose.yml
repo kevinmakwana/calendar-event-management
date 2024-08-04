@@ -8,8 +8,8 @@ services:
         environment:
             MYSQL_ROOT_PASSWORD: password
             MYSQL_DATABASE: calendar
-            MYSQL_USER: app
-            MYSQL_PASSWORD: app
+            MYSQL_USER: root
+            MYSQL_PASSWORD: password
         ports:
         - "${DOCKER_MYSQL_LOCAL_PORT}:3306"
         command:
@@ -25,8 +25,8 @@ services:
         environment:
             MYSQL_ROOT_PASSWORD: password
             MYSQL_DATABASE: calendar
-            MYSQL_USER: app
-            MYSQL_PASSWORD: app
+            MYSQL_USER: root
+            MYSQL_PASSWORD: password
         ports:
         - "3307:3306"
         command:
