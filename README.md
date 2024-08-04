@@ -121,6 +121,18 @@ To ensure code quality and standards, you can run the following Composer scripts
 
 * You can find postman collection inside `postman` directory.
 
+## Swagger Documentation
+
+To view the API documentation:
+
+1. **URL** : [https://api.calendar-event-management.test/api/documentation](https://api.calendar-event-management.test/api/documentation)
+2. **Description** : This URL will direct you to the Swagger UI where you can explore the available API endpoints, see their request and response formats, and interact with the API directly from your browser.
+
+**Tips for Using Swagger UI**
+
+* **Try It Out** : You can test API endpoints directly from the Swagger UI by filling in the request parameters and clicking "Execute".
+* **Check Responses** : The Swagger UI will display the response data along with status codes to help you understand the API's behavior.
+
 ## Deployment / CI Process
 
 The application has not yet been deployed to production. This section will be updated with deployment instructions later.
