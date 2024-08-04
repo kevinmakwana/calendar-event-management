@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>{{config('l5-swagger.documentations.'.$documentation.'.api.title')}}</title>
-    <link rel="stylesheet" type="text/css" href="{{ l5_swagger_asset($documentation, 'swagger-ui.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css">
     <link rel="icon" type="image/png" href="{{ l5_swagger_asset($documentation, 'favicon-32x32.png') }}" sizes="32x32"/>
     <link rel="icon" type="image/png" href="{{ l5_swagger_asset($documentation, 'favicon-16x16.png') }}" sizes="16x16"/>
     <style>
@@ -53,25 +53,11 @@
                 SwaggerUIStandalonePreset
             ],
 
-            plugins: [
-                SwaggerUIBundle.plugins.DownloadUrl
-            ],
-
             layout: "StandaloneLayout",
             docExpansion : "{!! config('l5-swagger.defaults.ui.display.doc_expansion', 'none') !!}",
             deepLinking: true,
             filter: {!! config('l5-swagger.defaults.ui.display.filter') ? 'true' : 'false' !!},
-            persistAuthorization: "{!! config('l5-swagger.defaults.ui.authorization.persist_authorization') ? 'true' : 'false' !!}",
-
         })
-
-        window.ui = ui
-
-        @if(in_array('oauth2', array_column(config('l5-swagger.defaults.securityDefinitions.securitySchemes'), 'type')))
-        ui.initOAuth({
-            usePkceWithAuthorizationCodeGrant: "{!! (bool)config('l5-swagger.defaults.ui.authorization.oauth2.use_pkce_with_authorization_code_grant') !!}"
-        })
-        @endif
     }
 </script>
 </body>

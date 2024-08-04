@@ -7,7 +7,7 @@
     },
     "servers": [
         {
-            "url": "http://api.calendar-event-management.test/api",
+            "url": "https://api.calendar-event-management.test/api",
             "description": "API Server"
         }
     ],
