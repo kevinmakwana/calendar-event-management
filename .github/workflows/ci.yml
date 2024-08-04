@@ -66,14 +66,5 @@ jobs:
         run: vendor/bin/pest --stop-on-error --stop-on-failure --parallel --compact
 
       - name: Run PHPCS
-        run: composer run-script phpcs
-        
-      - name: Run PHPMD
-        run: composer run-script phpmd
-
-      - name: Run PHPStan
-        run: composer run-script larastan
-      
-      - name: Run security checks
-        run: composer run-script security-checker
+        run: composer run-script check
 
