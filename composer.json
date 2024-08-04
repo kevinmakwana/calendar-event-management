@@ -18,7 +18,6 @@
         "larastan/larastan": "^2.9",
         "laravel/pint": "^1.13",
         "mockery/mockery": "^1.6",
-        "nocompromises/php-cs-fixer-config": "^1.0",
         "nunomaduro/collision": "^8.0",
         "pestphp/pest": "^2.34",
         "phpmd/phpmd": "^2.15",
@@ -59,14 +58,13 @@
             "@php artisan ide-helper:meta -n",
             "@php artisan ide-helper:models -n"
         ],
-        "phpcs": [
-            "php-cs-fixer check -v --diff"
-        ],
-        "phpmd": "vendor/bin/phpmd app text phpmd_ruleset.xml",
-        "phpcs-fix": [
-            "php-cs-fixer fix"
-        ],
         "security-checker": "vendor/bin/security-checker security:check ./composer.lock",
+        "pint": [
+            "@php vendor/bin/pint"
+        ],
+        "pint-dirty": [
+            "@php vendor/bin/pint --dirty"
+        ],
         "larastan": [
             "@php vendor/bin/phpstan analyse -v"
         ],
@@ -78,9 +76,8 @@
             "@putenv DB_HOST=mysql-test",
             "vendor/bin/pest --stop-on-error --stop-on-failure --parallel --compact"
         ],
-        "check" : [
-            "@phpcs",
-            "@phpmd",
+        "check": [
+            "@pint",
             "@larastan",
             "@security-checker"
         ],
@@ -92,10 +89,8 @@
         ]
     },
     "scripts-descriptions": {
-        "phpmd": "Runs PHP Mess Detector on the configured files and reports errors",
-        "phpcs": "Runs php-cs-fixer on the configured files and reports errors",
-        "phpcs-fix": "Runs php-cs-fixer on the configured files and automatically fixes errors",
-        "larastan": "Runs the Larastan (PHPStan)",
+        "pint": "Runs Laravel Pint for code formatting",
+        "larastan": "Runs Larastan (PHPStan)",
         "security-checker": "Runs the vulnerability check on the composer.lock file",
         "ide-helper-update": "Updates the IDE helper files"
     },
