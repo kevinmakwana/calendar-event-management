@@ -10,61 +10,36 @@ jobs:
   laravel-tests:
     runs-on: ubuntu-latest
 
-    services:
-      mysql:
-        image: mysql:8.0.37
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
-        env:
-          MYSQL_ROOT_PASSWORD: password
-          MYSQL_DATABASE: calendar
-          MYSQL_USER: app
-          MYSQL_PASSWORD: app
-
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: mbstring, xml, pdo_mysql, redis
-          coverage: none
-
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+      
       - name: Copy .env
         run: cp .env.example .env
 
-      - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-interaction --no-scripts --no-progress
+      - name: Build and start services
+        run: |
+          docker-compose -f docker-compose.yml up -d
 
-      - name: Generate application key
-        run: php artisan key:generate
+      - name: Run Composer install
+        run: |
+          docker-compose -f docker-compose.yml exec -T php-fpm-debug /bin/sh -c "docker/bin/composer install"
 
-      - name: Run migrations
-        env:
-          DB_CONNECTION: mysql
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
-          DB_DATABASE: calendar
-          DB_USERNAME: root
-          DB_PASSWORD: password
-        run: php artisan migrate --force
+      - name: Run post-create-project-cmd
+        run: |
+          docker-compose -f docker-compose.yml exec -T php-fpm-debug /bin/sh -c "docker/bin/composer run post-create-project-cmd"
+      
+      - name: Run checkk
+        run: |
+          docker-compose -f docker-compose.yml exec -T php-fpm-debug /bin/sh -c "docker/bin/composer run check"
 
       - name: Run tests
-        env:
-          DB_CONNECTION: mysql
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
-          DB_DATABASE: calendar
-          DB_USERNAME: root
-          DB_PASSWORD: password
-        run: vendor/bin/pest --stop-on-error --stop-on-failure --parallel --compact
+        run: |
+          docker-compose -f docker-compose.yml exec -T php-fpm-debug /bin/sh -c "docker/bin/composer test"
 
-      - name: Run Check script
-        run: composer run-script check
-
+      - name: Stop and remove services
+        if: always()
+        run: docker-compose -f docker-compose.yml down
