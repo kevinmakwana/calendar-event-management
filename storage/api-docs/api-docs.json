@@ -56,6 +56,16 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/IndexEventRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "Successful response",
@@ -398,6 +408,42 @@
                             }
                         },
                         "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "IndexEventRequest": {
+                "title": "Index Event Request",
+                "required": [
+                    "user_id"
+                ],
+                "properties": {
+                    "user_id": {
+                        "description": "The ID of the user",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "start": {
+                        "description": "The start datetime for filtering events",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-08-01T10:00:00"
+                    },
+                    "end": {
+                        "description": "The end datetime for filtering events",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-08-01T12:00:00"
+                    },
+                    "page": {
+                        "description": "The page number for pagination",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "per_page": {
+                        "description": "The number of items per page for pagination",
+                        "type": "integer",
+                        "example": 10
                     }
                 },
                 "type": "object"

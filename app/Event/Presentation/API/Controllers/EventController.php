@@ -43,6 +43,10 @@ class EventController extends Controller
      *     path="/events",
      *     summary="Get a list of events within the specified range",
      *     tags={"Events"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(ref="#/components/schemas/IndexEventRequest")
+     *     ),
      *     @OA\Parameter(
      *         name="user_id",
      *         in="query",
