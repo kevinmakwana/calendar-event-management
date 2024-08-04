@@ -94,9 +94,7 @@ class EventRepository implements EventRepositoryInterface
     public function deleteSubsequentEvents(int $parentId): bool
     {
         try {
-            return DB::transaction(function () use ($parentId) {
-                return Event::where('parent_id', $parentId)->delete() > 0;
-            });
+            return DB::transaction(fn() => Event::where('parent_id', $parentId)->delete() > 0);
         } catch (QueryException $e) {
             Log::error('Database error deleting subsequent events: ' . $e->getMessage(), ['parent_id' => $parentId]);
 

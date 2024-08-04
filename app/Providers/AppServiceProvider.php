@@ -17,9 +17,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(EventService::class, function ($app) {
-            return new EventService($app->make(EventRepositoryInterface::class));
-        });
+        $this->app->bind(EventService::class, fn($app) => new EventService($app->make(EventRepositoryInterface::class)));
     }
 
     /**
@@ -27,17 +25,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Factory::guessFactoryNamesUsing(function (string $modelName): string {
+        Factory::guessFactoryNamesUsing(fn(string $modelName): string =>
             // Ensure the return type is a class-string<Illuminate\Database\Eloquent\Factories\Factory>
-            return 'App\\Event\\Domain\\Factories\\' . class_basename($modelName) . 'Factory';
-        });
+            'App\\Event\\Domain\\Factories\\' . class_basename($modelName) . 'Factory');
 
-        Response::macro('apiResponse', function ($data = null, $message = '', $status = 200) {
-            return response()->json([
-                'data' => $data,
-                'message' => $message,
-                'status' => $status,
-            ], $status);
-        });
+        Response::macro('apiResponse', fn($data = null, $message = '', $status = 200) => response()->json([
+            'data' => $data,
+            'message' => $message,
+            'status' => $status,
+        ], $status));
     }
 }

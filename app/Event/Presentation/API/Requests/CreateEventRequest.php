@@ -13,12 +13,9 @@ use Illuminate\Validation\Rule;
  */
 class CreateEventRequest extends FormRequest
 {
-    protected EventService $eventService;
-
-    public function __construct(EventService $eventService)
+    public function __construct(protected EventService $eventService)
     {
         parent::__construct();
-        $this->eventService = $eventService;
     }
 
     /**

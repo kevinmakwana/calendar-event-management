@@ -16,7 +16,7 @@ use InvalidArgumentException;
 
 class EventService
 {
-    public function __construct(private EventRepositoryInterface $repository) {}
+    public function __construct(private readonly EventRepositoryInterface $repository) {}
 
     /**
      * Create a new event, handling recurrence if applicable.
@@ -144,7 +144,6 @@ class EventService
     /**
      * Validate recurrence parameters.
      *
-     * @param ?Carbon $repeatUntil
      * @throws ValidationException
      */
     private function validateRecurrence(Carbon $end, string $frequency, ?Carbon $repeatUntil): void

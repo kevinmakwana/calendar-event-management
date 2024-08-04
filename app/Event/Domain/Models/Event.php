@@ -60,15 +60,6 @@ class Event extends Model
     ];
 
     /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'recurring_pattern' => 'boolean',
-    ];
-
-    /**
      * @return EventFactory
      */
     protected static function newFactory()
@@ -115,5 +106,16 @@ class Event extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+    /**
+     * The attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'recurring_pattern' => 'boolean',
+        ];
     }
 }
