@@ -56,20 +56,17 @@ jobs:
         run: php artisan migrate --force
 
       - name: Run tests
-        env:
-          DB_CONNECTION: mysql
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
-          DB_DATABASE: calendar
-          DB_USERNAME: root
-          DB_PASSWORD: password
-        run: vendor/bin/pest --stop-on-error --stop-on-failure --parallel --compact
-
-      - name: Run PHPStan
-        run: composer run-script phpstan
+        run: composer run-script test
 
       - name: Run PHPCS
         run: composer run-script phpcs
-
+        
       - name: Run PHPMD
         run: composer run-script phpmd
+
+      - name: Run PHPStan
+        run: composer run-script larastan
+      
+      - name: Run security checks
+        run: composer run-script security-checker
+
