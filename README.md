@@ -16,17 +16,15 @@ To get started with local development, follow these steps. Make sure you run all
 
 ### DNS resolution
 
-> Decide on a local domain to use for this project. Substitute that any place you see `api.calendar-event-management.test` or `calendar-event-managemen` below.
+Decide on a local domain to use for this project. Substitute that any place you see `api.calendar-event-management.test` or `calendar-event-managemen` below.
 
 By default, this project will run on the host `api.calendar-event-management.test`. This requires some sort of local DNS resolution for that hostname
 to your localhost IP address. One easy way to do this for the entire `.test` top-level domain, is to run a lightweight tool
 called `dnsmasq`. You can install it via Homebrew on a Mac with: `brew install dnsmasq`.
 
-> If you've ever setup Valet, it already installed dnsmasq for you. You can verify if it's already installed by running
-> `brew services` and see if `dnsmasq` is listed.
+If you've ever setup Valet, it already installed dnsmasq for you. You can verify if it's already installed by running  `brew services` and see if `dnsmasq` is listed.
 
-If you don't want to run `dnsmasq`, you can also add a manual DNS entry to your `/etc/hosts` file in the form:
-`127.0.0.1 api.calendar-event-management.test`
+If you don't want to run `dnsmasq`, you can also add a manual DNS entry to your `/etc/hosts` file in the form: `127.0.0.1 api.calendar-event-management.test`
 
 ### Setting up an SSL certificate
 
@@ -105,6 +103,21 @@ Then, when you're done for the day, you can stop the Docker environment:
 
 > There is also a `down` command, and it might seem more logical as the opposite action of `up`. This command not only stops the containers, but removes them along with the Docker network. This doesn't harm anything, and no data will be lost if you run `down` instead, but there's no need to constantly remove and recreate the containers, so `stop` is a better choice.
 
+### Basic docker compose commands
+
+* Build or rebuild services
+  * `docker compose build`
+* Create and start containers
+  * `docker compose up -d`
+* Stop and remove containers, networks
+  * `docker compose down`
+* Stop all services
+  * `docker compose stop`
+* Restart service containers
+  * `docker compose restart`
+* Run a command inside a container
+  * `docker compose exec [container] [command]`
+
 ## Running Additional Composer Scripts
 
 To ensure code quality and standards, you can run the following Composer scripts:
@@ -127,7 +140,7 @@ To ensure code quality and standards, you can run the following Composer scripts
 
 To view the API documentation:
 
-1. **URL** : [https://api.calendar-event-management.test/api/documentation](https://api.calendar-event-management.test/api/documentation)
+1. **URL** : `https://api.calendar-event-management.test/api/documentation`
 2. **Description** : This URL will direct you to the Swagger UI where you can explore the available API endpoints, see their request and response formats, and interact with the API directly from your browser.
 
 **Tips for Using Swagger UI**
