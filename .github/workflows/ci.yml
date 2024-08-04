@@ -65,6 +65,6 @@ jobs:
           DB_PASSWORD: password
         run: vendor/bin/pest --stop-on-error --stop-on-failure --parallel --compact
 
-      - name: Run PHPCS
+      - name: Run Check script
         run: composer run-script check
 

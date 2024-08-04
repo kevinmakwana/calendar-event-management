@@ -58,6 +58,7 @@
             "@php artisan ide-helper:meta -n",
             "@php artisan ide-helper:models -n"
         ],
+        "phpmd": "vendor/bin/phpmd app text phpmd_ruleset.xml",
         "security-checker": "vendor/bin/security-checker security:check ./composer.lock",
         "pint": [
             "@php vendor/bin/pint"
@@ -78,8 +79,10 @@
         ],
         "check": [
             "@pint",
+            "@phpmd",
             "@larastan",
-            "@security-checker"
+            "@security-checker",
+            "@rector"
         ],
         "rector": [
             "@php vendor/bin/rector --dry-run"
