@@ -130,7 +130,7 @@ To ensure code quality and standards, you can run the following Composer scripts
 * To update the IDE helper files: `docker/bin/composer ide-helper-update`
 * Perform a dry run to check what changes Rector is about to make: `docker/bin/composer rector`
 * Apply the changes of rector: `docker/bin/composer rector-fix`
-* To run phpcs, phpmd, larastan, security-checker, test all togather: `docker/bin/composer check-everything`
+* To run phpcs, phpmd, larastan and security-checker all togather: `docker/bin/composer check`
 
 ## Postman Collection
 
