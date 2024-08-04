@@ -18,6 +18,17 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * @OA\Info(
+ *     title="Calendar Event Management API",
+ *     version="1.0.0",
+ *     description="API documentation for the Calendar Event Management system"
+ * )
+ * @OA\Server(
+ *     url=L5_SWAGGER_CONST_HOST,
+ *     description="API Server"
+ * )
+ */
 class EventController extends Controller
 {
     /**
@@ -28,10 +39,41 @@ class EventController extends Controller
     public function __construct(protected EventService $service) {}
 
     /**
-     * Get a list of events within the specified range.
-     *
-     * @param IndexEventRequest $request the HTTP request instance
-     * @return EventCollection a JSON response containing the list of events
+     * @OA\Get(
+     *     path="/events",
+     *     summary="Get a list of events within the specified range",
+     *     tags={"Events"},
+     *     @OA\Parameter(
+     *         name="user_id",
+     *         in="query",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="ID of the user"
+     *     ),
+     *     @OA\Parameter(
+     *         name="start",
+     *         in="query",
+     *         @OA\Schema(type="string", format="date-time"),
+     *         description="Start date-time of the range"
+     *     ),
+     *     @OA\Parameter(
+     *         name="end",
+     *         in="query",
+     *         @OA\Schema(type="string", format="date-time"),
+     *         description="End date-time of the range"
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         @OA\Schema(type="integer"),
+     *         description="Number of events per page"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful response",
+     *         @OA\JsonContent(ref="#/components/schemas/EventCollection")
+     *     )
+     * )
      */
     public function index(IndexEventRequest $request): EventCollection
     {
@@ -47,57 +89,141 @@ class EventController extends Controller
     }
 
     /**
-     * Store a new event.
-     *
-     * @param CreateEventRequest $request the request instance containing event data
-     * @return JsonResponse a JSON response containing the created event
+     * @OA\Post(
+     *     path="/events",
+     *     summary="Store a new event",
+     *     tags={"Events"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(ref="#/components/schemas/CreateEventRequest")
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Event created successfully",
+     *         @OA\JsonContent(ref="#/components/schemas/Event")
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     )
+     * )
      */
     public function store(CreateEventRequest $request): JsonResponse
     {
         try {
             $event = $this->service->createEvent($request->validated());
-
             return Response::apiResponse(new Event($event), 'Event created successfully.', 201);
         } catch (ValidationException $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-                'errors' => $e->errors(),
-            ], 422);
+            return $this->handleValidationException($e);
         }
     }
 
     /**
-     * Update an existing event.
-     *
-     * @param UpdateEventRequest $request the request instance containing updated event data
-     * @param int $id the ID of the event to update
-     * @param int $user the ID of the user updating the event
-     * @return JsonResponse a JSON response containing the updated event
+     * @OA\Put(
+     *     path="/events/{id}",
+     *     summary="Update an existing event",
+     *     tags={"Events"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="ID of the event to update"
+     *     ),
+     *     @OA\Parameter(
+     *         name="user",
+     *         in="query",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="ID of the user updating the event"
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(ref="#/components/schemas/UpdateEventRequest")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Event updated successfully",
+     *         @OA\JsonContent(ref="#/components/schemas/Event")
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     )
+     * )
      */
     public function update(UpdateEventRequest $request, int $id, int $user): JsonResponse
     {
         try {
             $event = $this->service->getUserEventByIds($id, $user);
             $this->service->updateEvent($event, $request->validated());
-
             return Response::apiResponse(new Event($event->fresh()), 'Event updated successfully.');
         } catch (ModelNotFoundException $e) {
             return Response::apiResponse(null, 'Event not found.', 404);
         } catch (ValidationException $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-                'errors' => $e->errors(),
-            ], 422);
+            return $this->handleValidationException($e);
         }
     }
 
     /**
-     * Delete an event.
-     *
-     * @param Request $request the HTTP request instance
-     * @param int $id the ID of the event to delete
-     * @param int $user the ID of the user deleting the event
-     * @return JsonResponse a JSON response indicating successful deletion
+     * @OA\Delete(
+     *     path="/events/{id}",
+     *     summary="Delete an event",
+     *     tags={"Events"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="ID of the event to delete"
+     *     ),
+     *     @OA\Parameter(
+     *         name="user",
+     *         in="query",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="ID of the user deleting the event"
+     *     ),
+     *     @OA\Parameter(
+     *         name="deleteSubsequent",
+     *         in="query",
+     *         @OA\Schema(type="boolean"),
+     *         description="Whether to delete subsequent recurring events"
+     *     ),
+     *     @OA\Response(
+     *         response=204,
+     *         description="Event deleted successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad request",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string")
+     *         )
+     *     )
+     * )
      */
     public function destroy(Request $request, int $id, int $user): JsonResponse
     {
@@ -106,12 +232,27 @@ class EventController extends Controller
         try {
             $event = $this->service->getUserEventByIds($id, $user);
             $this->service->deleteEvent($event, $deleteSubsequent);
-
             return Response::apiResponse(null, 'Event deleted successfully.', 204);
         } catch (ModelNotFoundException $e) {
             return Response::apiResponse(null, 'Event not found.', 404);
         } catch (Exception $e) {
-            return Response::apiResponse(null, $e->getMessage(), 400);
+            return Response::apiResponse(null, 'Bad request.', 400);
         }
+    }
+
+    /**
+     * Handle validation exceptions.
+     *
+     * @param ValidationException $e the validation exception
+     * @return JsonResponse the response
+     */
+    private function handleValidationException(ValidationException $e): JsonResponse
+    {
+        return Response::apiResponse(
+            null,
+            $e->getMessage(),
+            422,
+            ['errors' => $e->errors()]
+        );
     }
 }

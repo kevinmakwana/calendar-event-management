@@ -1,0 +1,462 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Calendar Event Management API",
+        "description": "API documentation for the Calendar Event Management system",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://api.calendar-event-management.test/api",
+            "description": "API Server"
+        }
+    ],
+    "paths": {
+        "/events": {
+            "get": {
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Get a list of events within the specified range",
+                "operationId": "a92a1152fd7638bfd9ef98de1e34708c",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "description": "ID of the user",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "start",
+                        "in": "query",
+                        "description": "Start date-time of the range",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "end",
+                        "in": "query",
+                        "description": "End date-time of the range",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of events per page",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EventCollection"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Store a new event",
+                "operationId": "08b67a616aaa5a55898c629d9d805d0f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateEventRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Event created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Event"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/events/{id}": {
+            "put": {
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Update an existing event",
+                "operationId": "4dc3a01c6793d863af609a57cf37006e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the event to update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "user",
+                        "in": "query",
+                        "description": "ID of the user updating the event",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateEventRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Event updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Event"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Event not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Delete an event",
+                "operationId": "83476903c7de477adfe9f24a08321c43",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the event to delete",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "user",
+                        "in": "query",
+                        "description": "ID of the user deleting the event",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "deleteSubsequent",
+                        "in": "query",
+                        "description": "Whether to delete subsequent recurring events",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Event deleted successfully"
+                    },
+                    "404": {
+                        "description": "Event not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "CreateEventRequest": {
+                "title": "Create Event Request",
+                "required": [
+                    "user_id",
+                    "title",
+                    "start",
+                    "end",
+                    "recurring_pattern"
+                ],
+                "properties": {
+                    "user_id": {
+                        "description": "User ID",
+                        "type": "integer"
+                    },
+                    "title": {
+                        "description": "Event title",
+                        "type": "string"
+                    },
+                    "description": {
+                        "description": "Event description",
+                        "type": "string"
+                    },
+                    "start": {
+                        "description": "Event start time",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "end": {
+                        "description": "Event end time",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "recurring_pattern": {
+                        "description": "Event is recurring",
+                        "type": "boolean"
+                    },
+                    "frequency": {
+                        "description": "Event recurrence frequency",
+                        "type": "string",
+                        "enum": [
+                            "daily",
+                            "weekly",
+                            "monthly",
+                            "yearly"
+                        ]
+                    },
+                    "repeat_until": {
+                        "description": "Event recurrence end time",
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "Event": {
+                "title": "Event",
+                "properties": {
+                    "id": {
+                        "description": "Event ID",
+                        "type": "integer"
+                    },
+                    "title": {
+                        "description": "Event title",
+                        "type": "string"
+                    },
+                    "description": {
+                        "description": "Event description",
+                        "type": "string"
+                    },
+                    "start": {
+                        "description": "Event start time",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "end": {
+                        "description": "Event end time",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "recurring_pattern": {
+                        "description": "Event is recurring",
+                        "type": "boolean"
+                    },
+                    "frequency": {
+                        "description": "Event recurrence frequency",
+                        "type": "string"
+                    },
+                    "repeat_until": {
+                        "description": "Event recurrence end time",
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "EventCollection": {
+                "title": "Event Collection",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Event"
+                        }
+                    },
+                    "meta": {
+                        "properties": {
+                            "total": {
+                                "description": "Total number of items",
+                                "type": "integer"
+                            },
+                            "current_page": {
+                                "description": "Current page number",
+                                "type": "integer"
+                            },
+                            "per_page": {
+                                "description": "Number of items per page",
+                                "type": "integer"
+                            },
+                            "last_page": {
+                                "description": "Last page number",
+                                "type": "integer"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "UpdateEventRequest": {
+                "title": "Update Event Request",
+                "required": [
+                    "title",
+                    "start",
+                    "end",
+                    "recurring_pattern"
+                ],
+                "properties": {
+                    "title": {
+                        "description": "Event title",
+                        "type": "string"
+                    },
+                    "description": {
+                        "description": "Event description",
+                        "type": "string"
+                    },
+                    "start": {
+                        "description": "Event start time",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "end": {
+                        "description": "Event end time",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "recurring_pattern": {
+                        "description": "Event is recurring",
+                        "type": "boolean"
+                    },
+                    "frequency": {
+                        "description": "Event recurrence frequency",
+                        "type": "string",
+                        "enum": [
+                            "daily",
+                            "weekly",
+                            "monthly",
+                            "yearly"
+                        ]
+                    },
+                    "repeat_until": {
+                        "description": "Event recurrence end time",
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Events",
+            "description": "Events"
+        }
+    ]
+}
