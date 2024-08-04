@@ -23,6 +23,19 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version
 
+      - name: Install mkcert
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnss3-tools
+          curl -L -o mkcert https://dl.filippo.io/mkcert/latest/mkcert-linux-amd64
+          chmod +x mkcert
+          sudo mv mkcert /usr/local/bin/mkcert
+
+      - name: Generate local CA and SSL certificates
+        run: |
+          mkcert -install
+          mkcert -cert-file docker/nginx/ssl.pem -key-file docker/nginx/key.pem api.calendar-event-management.test
+
       - name: Build and start services
         run: |
           docker-compose -f docker-compose.yml up -d
