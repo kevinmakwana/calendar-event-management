@@ -80,14 +80,12 @@ jobs:
       - name: Install Composer dependencies
         run: |
           docker-compose exec -T php-fpm-debug /bin/sh -c "composer install --prefer-dist --no-progress --no-interaction"
-
-      - name: Run migrations
+      - name: dev setup
         run: |
-          docker-compose run --rm -e DB_CONNECTION=mysql -e DB_HOST=mysql-test -e DB_PORT=3306 -e DB_DATABASE=calendar -e DB_USERNAME=app -e DB_PASSWORD=app php-fpm-debug php artisan migrate:fresh --seed --force
-
+          docker-compose exec -T php-fpm-debug /bin/sh -c "composer run dev"
       - name: Run tests
         run: |
-          docker-compose exec -T php-fpm-debug /bin/sh -c "composer test"
+          docker-compose exec -T php-fpm-debug /bin/sh -c "composer run ci"
 
       - name: Stop and remove services
         if: always()
