@@ -30,8 +30,3 @@ RUN pecl install xdebug-3.3.2 && docker-php-ext-enable xdebug
 COPY docker-php-ext-xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
 WORKDIR /app
-
-COPY . /app
-
-#composer install
-RUN composer install --no-scripts --no-autoloader
