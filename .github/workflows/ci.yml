@@ -47,17 +47,16 @@ jobs:
 
       - name: Run Composer install
         run: |
-          docker-compose -f docker-compose.yml exec -T php-fpm-debug /bin/sh -c "docker/bin/composer install"
+          docker-compose -f docker-compose.yml exec -T php-fpm-debug /bin/sh -c "composer install"
 
       - name: Run post-create-project-cmd
         run: |
-          docker-compose -f docker-compose.yml exec -T php-fpm-debug /bin/sh -c "docker/bin/composer run post-create-project-cmd"
+          docker-compose -f docker-compose.yml exec -T php-fpm-debug /bin/sh -c "composer run post-create-project-cmd"
 
       - name: Run tests
         run: |
-          docker-compose -f docker-compose.yml exec -T php-fpm-debug /bin/sh -c "docker/bin/composer test"
+          docker-compose -f docker-compose.yml exec -T php-fpm-debug /bin/sh -c "composer test"
 
       - name: Stop and remove services
         if: always()
         run: docker-compose -f docker-compose.yml down
-        
