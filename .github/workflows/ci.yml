@@ -55,12 +55,12 @@ jobs:
           docker-compose exec -T php-fpm-debug /bin/sh -c "composer install"
 
       - name: Run migrations and seeders
-        run: docker-compose run --rm -e DB_CONNECTION=mysql -e DB_HOST=mysql-test -e DB_PORT=3307 -e DB_DATABASE=calendar -e DB_USERNAME=root -e DB_PASSWORD=password php-fpm-debug php artisan migrate:fresh --seed --force
+        run: docker-compose run --rm -e DB_CONNECTION=mysql -e DB_HOST=mysql -e DB_PORT=3307 -e DB_DATABASE=calendar -e DB_USERNAME=root -e DB_PASSWORD=password php-fpm-debug php artisan migrate:fresh --seed --force
 
       - name: Run tests
         env:
           DB_CONNECTION: mysql
-          DB_HOST: mysql-test
+          DB_HOST: mysql
           DB_PORT: 3307
           DB_DATABASE: calendar
           DB_USERNAME: root
