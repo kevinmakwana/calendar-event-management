@@ -18,6 +18,7 @@ jobs:
       DB_DATABASE: calendar
       DB_USERNAME: app
       DB_PASSWORD: app
+      DB_HOST: mysql-test # Pointing to mysql-test service
 
     steps:
       - name: Checkout code
@@ -52,15 +53,26 @@ jobs:
           docker-compose -f docker-compose.yml up -d
           docker-compose -f docker-compose.yml logs --tail=100
 
-      - name: Wait for services to be ready
+      - name: Wait for MySQL services to be ready
         run: |
-          echo "Waiting for services to be ready..."
+          echo "Waiting for mysql service to be ready..."
           for i in {1..60}; do
-            if docker-compose exec -T mysql mysqladmin ping --silent && docker-compose exec -T mysql-test mysqladmin ping --silent; then
-              echo "Services are ready!"
+            if docker-compose exec -T mysql mysqladmin ping --silent; then
+              echo "MySQL service is ready!"
               break
             else
-              echo "Services are not ready yet, retrying..."
+              echo "MySQL service is not ready yet, retrying..."
+              sleep 5
+            fi
+          done
+
+          echo "Waiting for mysql-test service to be ready..."
+          for i in {1..60}; do
+            if docker-compose exec -T mysql-test mysqladmin ping --silent; then
+              echo "MySQL-test service is ready!"
+              break
+            else
+              echo "MySQL-test service is not ready yet, retrying..."
               sleep 5
             fi
           done
@@ -71,7 +83,7 @@ jobs:
 
       - name: Run migrations
         run: |
-          docker-compose run --rm -e DB_CONNECTION=mysql -e DB_HOST=mysql -e DB_PORT=3306 -e DB_DATABASE=calendar -e DB_USERNAME=app -e DB_PASSWORD=app php-fpm-debug php artisan migrate:fresh --seed --force
+          docker-compose run --rm -e DB_CONNECTION=mysql -e DB_HOST=mysql-test -e DB_PORT=3306 -e DB_DATABASE=calendar -e DB_USERNAME=app -e DB_PASSWORD=app php-fpm-debug php artisan migrate:fresh --seed --force
 
       - name: Run tests
         run: |
