@@ -96,7 +96,7 @@ jobs:
 
       - name: Install Composer dependencies
         run: |
-          docker-compose exec -T php-fpm-debug /bin/sh -c "composer post-root-package-install"
+          docker-compose exec -T php-fpm-debug /bin/sh -c "composer run post-root-package-install"
 
       - name: Run migrations
         run: |
