@@ -45,27 +45,6 @@ jobs:
         run: |
           docker-compose -f docker-compose.yml up -d
 
-      - name: Wait for services to be ready
-        run: |
-          sleep 30
-          docker-compose -f docker-compose.yml ps
-
-      - name: Copy .env file
-        run: |
-          docker-compose -f docker-compose.yml exec -T php-fpm-debug /bin/sh -c "cp .env.example .env"
-
-      - name: Run Composer install
-        run: |
-          docker-compose -f docker-compose.yml exec -T php-fpm-debug /bin/sh -c "composer install"
-
-      - name: Generate application key
-        run: |
-          docker-compose -f docker-compose.yml exec -T php-fpm-debug /bin/sh -c "php artisan key:generate --ansi"
-
-      - name: Run post-create-project-cmd
-        run: |
-          docker-compose -f docker-compose.yml exec -T php-fpm-debug /bin/sh -c "composer run post-create-project-cmd"
-
       - name: Run tests
         run: |
           docker-compose -f docker-compose.yml exec -T php-fpm-debug /bin/sh -c "composer test"

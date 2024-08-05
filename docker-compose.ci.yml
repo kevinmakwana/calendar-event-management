@@ -1,0 +1,10 @@
+########################################################################################################################
+## CI specific changes to the docker-compose.yml file
+########################################################################################################################
+
+services:
+
+    ## The PHP-FPM that's used for unit tests and could possibly be used for production instances
+    php-fpm:
+        build:
+            target: ci
