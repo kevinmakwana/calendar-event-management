@@ -22,9 +22,6 @@ COPY --from=composer:2.7.6 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
-# Change ownership of specific directories
-RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
-
 # Install PHP dependencies
 RUN composer install
 
