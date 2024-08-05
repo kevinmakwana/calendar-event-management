@@ -38,10 +38,10 @@ jobs:
       matrix:
         php-versions: ['8.2']
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Docker
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
       - name: Install Docker Compose
@@ -57,19 +57,20 @@ jobs:
           curl -L -o mkcert https://dl.filippo.io/mkcert/latest?for=linux/amd64
           chmod +x mkcert
           sudo mv mkcert /usr/local/bin/mkcert
-          mkcert --version # Verify installation
+          mkcert --version
 
       - name: Generate local CA and SSL certificates
         run: |
           mkcert -install
           mkcert -cert-file docker/nginx/ssl.pem -key-file docker/nginx/key.pem api.calendar-event-management.test
-  
-      - name: Build and start docker services
+
+      - name: Build and start Docker services
         run: |
           docker-compose -f docker-compose.yml build --no-cache
           docker-compose -f docker-compose.yml up -d
           docker-compose -f docker-compose.yml ps
           docker-compose -f docker-compose.yml logs php-fpm-debug
+
       - name: Wait for MySQL services to be ready
         run: |
           echo "Waiting for mysql service to be ready..."
@@ -93,7 +94,7 @@ jobs:
               sleep 5
             fi
           done
-          
+
       - name: Wait for php-fpm-debug service to be ready
         run: |
           echo "Waiting for php-fpm-debug service to be ready..."
@@ -110,13 +111,15 @@ jobs:
       - name: Install Composer dependencies
         run: |
           docker-compose exec -T php-fpm-debug /bin/sh -c "composer install --prefer-dist --no-progress --no-interaction"
+
       - name: Run Composer Dev setup
         run: |
           docker-compose exec -T php-fpm-debug /bin/sh -c "composer run dev"
+
       - name: Run tests
         run: |
           docker-compose exec -T php-fpm-debug /bin/sh -c "vendor/bin/pest --stop-on-error --stop-on-failure"
 
-      - name: Stop and remove services
+      - name: Stop and remove Docker services
         if: always()
         run: docker-compose -f docker-compose.yml down --volumes --remove-orphans
