@@ -9,7 +9,6 @@ on:
 jobs:
   calendar-event-management-tests:
     runs-on: ubuntu-latest
-
     env:
       DOCKER_SERVER_NAME: api.calendar-event-management.test
       DOCKER_MYSQL_LOCAL_PORT: 3306
@@ -19,10 +18,32 @@ jobs:
       DB_USERNAME: app
       DB_PASSWORD: app
       DB_HOST: mysql-test # Pointing to mysql-test service
-
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: false
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: laravel
+        ports:
+          - 3306/tcp
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+      mysql-test:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: false
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: laravel
+        ports:
+          - 3307:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    strategy:
+      fail-fast: false
+      matrix:
+        php-versions: ['8.2']
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up Docker
         uses: docker/setup-buildx-action@v2
