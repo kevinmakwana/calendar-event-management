@@ -12,7 +12,7 @@ jobs:
 
     env:
       DOCKER_SERVER_NAME: api.calendar-event-management.test
-      DOCKER_MYSQL_LOCAL_PORT: 3306
+      DOCKER_MYSQL_LOCAL_PORT: 3307
       DOCKER_NGINX_LOCAL_PORT: 443
       DB_CONNECTION: mysql
       DB_DATABASE: calendar
@@ -46,50 +46,24 @@ jobs:
           mkcert -install
           mkcert -cert-file docker/nginx/ssl.pem -key-file docker/nginx/key.pem api.calendar-event-management.test
 
-      - name: Build docker services
+      - name: Build and start docker services
         run: |
           docker-compose -f docker-compose.yml build --no-cache
+          docker-compose -f docker-compose.yml up -d
           docker-compose -f docker-compose.yml logs --tail=100
 
-      - name: Start docker services
+      - name: Wait for services to be ready
         run: |
-          docker-compose -f docker-compose.yml up -d
-
-      - name: Wait for MySQL to be ready
-        run: |
-          echo "Waiting for MySQL to be ready..."
+          echo "Waiting for services to be ready..."
           for i in {1..60}; do
-            if docker-compose exec -T mysql mysqladmin ping --silent; then
-              echo "MySQL is ready!"
+            if docker-compose exec -T mysql mysqladmin ping --silent && docker-compose exec -T mysql-test mysqladmin ping --silent; then
+              echo "Services are ready!"
               break
             else
-              echo "MySQL is not ready yet, retrying..."
+              echo "Services are not ready yet, retrying..."
               sleep 5
             fi
           done
-
-      - name: Wait for MySQL Test to be ready
-        run: |
-          echo "Waiting for MySQL Test to be ready..."
-          for i in {1..60}; do
-            if docker-compose exec -T mysql-test mysqladmin ping --silent; then
-              echo "MySQL Test is ready!"
-              break
-            else
-              echo "MySQL Test is not ready yet, retrying..."
-              sleep 5
-            fi
-          done
-
-      - name: Print MySQL logs
-        run: |
-          echo "Printing MySQL logs..."
-          docker-compose logs --tail=100 mysql
-
-      - name: Print MySQL Test logs
-        run: |
-          echo "Printing MySQL Test logs..."
-          docker-compose logs --tail=100 mysql-test
 
       - name: Install Composer dependencies
         run: |
@@ -99,19 +73,9 @@ jobs:
         run: |
           docker-compose run --rm -e DB_CONNECTION=mysql -e DB_HOST=mysql-test -e DB_PORT=3307 -e DB_DATABASE=calendar -e DB_USERNAME=app -e DB_PASSWORD=app php-fpm-debug php artisan migrate:fresh --seed --force
 
-      - name: Print migration logs
-        run: |
-          echo "Printing migration logs..."
-          docker-compose logs --tail=100 php-fpm-debug
-
       - name: Run tests
         run: |
           docker-compose exec -T php-fpm-debug vendor/bin/pest --verbose
-
-      - name: Print test logs
-        run: |
-          echo "Printing test logs..."
-          docker-compose logs --tail=100 php-fpm-debug
 
       - name: Stop and remove services
         if: always()
