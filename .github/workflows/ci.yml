@@ -51,7 +51,6 @@ jobs:
         run: |
           docker-compose -f docker-compose.yml build --no-cache
           docker-compose -f docker-compose.yml up -d
-          docker-compose -f docker-compose.yml logs --tail=100
 
       - name: View php-fpm-debug logs
         run: docker-compose -f docker-compose.yml logs php-fpm-debug
@@ -106,7 +105,7 @@ jobs:
 
       - name: Run tests
         run: |
-          docker-compose exec -T php-fpm-debug /bin/sh -c "composer run ci"
+          docker-compose exec -T php-fpm-debug /bin/sh -c "composer run pest"
 
       - name: Stop and remove services
         if: always()
