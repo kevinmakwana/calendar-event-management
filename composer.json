@@ -55,6 +55,12 @@
             "@php artisan migrate --graceful --ansi",
             "@php artisan db:seed --ansi"
         ],
+        "dev": [
+            "@post-root-package-install",
+            "@post-create-project-cmd",
+            "@php artisan migrate --seed",
+            "@ide-helper-update"
+        ],
         "ide-helper-update": [
             "@php artisan clear-compiled",
             "@php artisan ide-helper:generate -n",
@@ -76,7 +82,7 @@
             "Composer\\Config::disableProcessTimeout",
             "@php artisan migrate:fresh --seed"
         ],
-        "test": [
+        "pest": [
             "@putenv DB_HOST=mysql-test",
             "@php artisan config:clear",
             "vendor/bin/pest --stop-on-error --stop-on-failure"
@@ -93,6 +99,22 @@
         ],
         "rector-fix": [
             "@php vendor/bin/rector process"
+        ],
+        "pre-commit": [
+            "@pint",
+            "@phpmd",
+            "@larastan",
+            "@security-checker"
+        ],
+        "pre-push": [
+            "@pest"
+        ],
+        "tests": [
+            "@pre-commit",
+            "@pre-push"
+        ],
+        "ci": [
+            "@tests"
         ]
     },
     "scripts-descriptions": {
