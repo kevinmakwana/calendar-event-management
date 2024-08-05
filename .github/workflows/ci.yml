@@ -45,20 +45,20 @@ jobs:
         run: |
           docker-compose -f docker-compose.yml up -d
 
-          - name: Wait for MySQL to be ready
-          run: |
-            echo "Waiting for MySQL to be ready..."
-            for i in {1..30}; do
-              if docker-compose exec -T mysql mysqladmin ping --silent; then
-                echo "MySQL is ready!"
-                break
-              else
-                echo "MySQL is not ready yet, retrying..."
-                sleep 2
-              fi
-            done
-          continue-on-error: true
-  
+      - name: Wait for MySQL to be ready
+        run: |
+          echo "Waiting for MySQL to be ready..."
+          for i in {1..30}; do
+            if docker-compose exec -T mysql mysqladmin ping --silent; then
+              echo "MySQL is ready!"
+              break
+            else
+              echo "MySQL is not ready yet, retrying..."
+              sleep 2
+            fi
+          done
+        continue-on-error: true
+
       - name: Run migrations
         env:
           DB_CONNECTION: mysql
