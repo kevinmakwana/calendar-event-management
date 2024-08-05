@@ -115,4 +115,4 @@ jobs:
 
       - name: Stop and remove services
         if: always()
-        run: docker-compose -f docker-compose.yml down
+        run: docker-compose -f docker-compose.yml down --volumes --remove-orphans
