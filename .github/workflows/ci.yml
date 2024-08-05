@@ -25,6 +25,19 @@ jobs:
         run: |
           sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
+      
+      - name: Install mkcert
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnss3-tools
+          curl -L -o mkcert https://dl.filippo.io/mkcert/latest/mkcert-linux-amd64
+          chmod +x mkcert
+          sudo mv mkcert /usr/local/bin/mkcert
+
+      - name: Generate local CA and SSL certificates
+        run: |
+          mkcert -install
+          mkcert -cert-file docker/nginx/ssl.pem -key-file docker/nginx/key.pem api.calendar-event-management.test
 
       - name: Build Docker images
         run: docker-compose build --no-cache
