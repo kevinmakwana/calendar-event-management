@@ -67,6 +67,9 @@ jobs:
           DB_DATABASE: calendar
           DB_USERNAME: root
           DB_PASSWORD: password
+          DOCKER_SERVER_NAME: api.calendar-event-management.test
+          DOCKER_MYSQL_LOCAL_PORT: 3306
+          DOCKER_NGINX_LOCAL_PORT: 443
         run: docker-compose run --rm php-fpm-debug php artisan migrate --force
 
       - name: Run tests
@@ -77,6 +80,9 @@ jobs:
           DB_DATABASE: calendar
           DB_USERNAME: root
           DB_PASSWORD: password
+          DOCKER_SERVER_NAME: api.calendar-event-management.test
+          DOCKER_MYSQL_LOCAL_PORT: 3306
+          DOCKER_NGINX_LOCAL_PORT: 443
         run: |
           docker-compose exec -T php-fpm-debug /bin/sh -c "composer test"
 
