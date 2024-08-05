@@ -10,6 +10,11 @@ jobs:
   calendar-event-management-tests:
     runs-on: ubuntu-latest
 
+    env:
+      DOCKER_SERVER_NAME: api.calendar-event-management.test
+      DOCKER_MYSQL_LOCAL_PORT: 3306
+      DOCKER_NGINX_LOCAL_PORT: 443
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -38,12 +43,12 @@ jobs:
           mkcert -cert-file docker/nginx/ssl.pem -key-file docker/nginx/key.pem api.calendar-event-management.test
 
       - name: Build and start services
-        env:
-          DOCKER_SERVER_NAME: api.calendar-event-management.test
-          DOCKER_MYSQL_LOCAL_PORT: 3306
-          DOCKER_NGINX_LOCAL_PORT: 443
         run: |
           docker-compose -f docker-compose.yml up -d
+      
+      - name: Install Composer dependencies
+        run: |
+          docker-compose exec -T php-fpm-debug /bin/sh -c "composer install"
 
       - name: Wait for MySQL to be ready
         run: |
@@ -67,9 +72,6 @@ jobs:
           DB_DATABASE: calendar
           DB_USERNAME: root
           DB_PASSWORD: password
-          DOCKER_SERVER_NAME: api.calendar-event-management.test
-          DOCKER_MYSQL_LOCAL_PORT: 3306
-          DOCKER_NGINX_LOCAL_PORT: 443
         run: docker-compose run --rm php-fpm-debug php artisan migrate:fresh --seed --force
 
       - name: Run tests
@@ -80,9 +82,6 @@ jobs:
           DB_DATABASE: calendar
           DB_USERNAME: root
           DB_PASSWORD: password
-          DOCKER_SERVER_NAME: api.calendar-event-management.test
-          DOCKER_MYSQL_LOCAL_PORT: 3306
-          DOCKER_NGINX_LOCAL_PORT: 443
         run: |
           docker-compose exec -T php-fpm-debug /bin/sh -c "composer test"
 
