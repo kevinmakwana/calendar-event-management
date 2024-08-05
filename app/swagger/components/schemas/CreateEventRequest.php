@@ -12,6 +12,7 @@ use OpenApi\Annotations as OA;
  *     type="object",
  *     title="Create Event Request",
  *     required={"user_id", "title", "start", "end", "recurring_pattern"},
+ *
  *     @OA\Property(property="user_id", type="integer", description="User ID"),
  *     @OA\Property(property="title", type="string", description="Event title"),
  *     @OA\Property(property="description", type="string", description="Event description"),

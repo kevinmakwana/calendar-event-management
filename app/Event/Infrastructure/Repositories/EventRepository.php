@@ -21,18 +21,18 @@ class EventRepository implements EventRepositoryInterface
     /**
      * Create a new event.
      *
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     public function create(array $data): Event
     {
         try {
             return Event::create($data);
         } catch (QueryException $e) {
-            Log::error('Database error creating event: ' . $e->getMessage(), ['data' => $data]);
+            Log::error('Database error creating event: '.$e->getMessage(), ['data' => $data]);
 
             throw $e;
         } catch (Exception $e) {
-            Log::error('Error creating event: ' . $e->getMessage(), ['data' => $data]);
+            Log::error('Error creating event: '.$e->getMessage(), ['data' => $data]);
 
             throw $e;
         }
@@ -53,18 +53,18 @@ class EventRepository implements EventRepositoryInterface
     /**
      * Update an existing event.
      *
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     public function update(Event $event, array $data): bool
     {
         try {
             return $event->update($data);
         } catch (QueryException $e) {
-            Log::error('Database error updating event: ' . $e->getMessage(), ['event_id' => $event->id, 'data' => $data]);
+            Log::error('Database error updating event: '.$e->getMessage(), ['event_id' => $event->id, 'data' => $data]);
 
             throw $e;
         } catch (Exception $e) {
-            Log::error('Error updating event: ' . $e->getMessage(), ['event_id' => $event->id, 'data' => $data]);
+            Log::error('Error updating event: '.$e->getMessage(), ['event_id' => $event->id, 'data' => $data]);
 
             throw $e;
         }
@@ -78,11 +78,11 @@ class EventRepository implements EventRepositoryInterface
         try {
             return $event->delete();
         } catch (QueryException $e) {
-            Log::error('Database error deleting event: ' . $e->getMessage(), ['event_id' => $event->id]);
+            Log::error('Database error deleting event: '.$e->getMessage(), ['event_id' => $event->id]);
 
             throw $e;
         } catch (Exception $e) {
-            Log::error('Error deleting event: ' . $e->getMessage(), ['event_id' => $event->id]);
+            Log::error('Error deleting event: '.$e->getMessage(), ['event_id' => $event->id]);
 
             throw $e;
         }
@@ -94,13 +94,13 @@ class EventRepository implements EventRepositoryInterface
     public function deleteSubsequentEvents(int $parentId): bool
     {
         try {
-            return DB::transaction(fn() => Event::where('parent_id', $parentId)->delete() > 0);
+            return DB::transaction(fn () => Event::where('parent_id', $parentId)->delete() > 0);
         } catch (QueryException $e) {
-            Log::error('Database error deleting subsequent events: ' . $e->getMessage(), ['parent_id' => $parentId]);
+            Log::error('Database error deleting subsequent events: '.$e->getMessage(), ['parent_id' => $parentId]);
 
             throw $e;
         } catch (Exception $e) {
-            Log::error('Error deleting subsequent events: ' . $e->getMessage(), ['parent_id' => $parentId]);
+            Log::error('Error deleting subsequent events: '.$e->getMessage(), ['parent_id' => $parentId]);
 
             throw $e;
         }
@@ -114,11 +114,11 @@ class EventRepository implements EventRepositoryInterface
         try {
             return Event::whereBetween('start', [$start, $end])->get();
         } catch (QueryException $e) {
-            Log::error('Database error finding events in range: ' . $e->getMessage(), ['start' => $start, 'end' => $end]);
+            Log::error('Database error finding events in range: '.$e->getMessage(), ['start' => $start, 'end' => $end]);
 
             throw $e;
         } catch (Exception $e) {
-            Log::error('Error finding events in range: ' . $e->getMessage(), ['start' => $start, 'end' => $end]);
+            Log::error('Error finding events in range: '.$e->getMessage(), ['start' => $start, 'end' => $end]);
 
             throw $e;
         }
@@ -132,11 +132,11 @@ class EventRepository implements EventRepositoryInterface
         try {
             return Event::whereBetween('start', [$start, $end])->paginate($perPage);
         } catch (QueryException $e) {
-            Log::error('Database error finding events in range with pagination: ' . $e->getMessage(), ['start' => $start, 'end' => $end, 'perPage' => $perPage]);
+            Log::error('Database error finding events in range with pagination: '.$e->getMessage(), ['start' => $start, 'end' => $end, 'perPage' => $perPage]);
 
             throw $e;
         } catch (Exception $e) {
-            Log::error('Error finding events in range with pagination: ' . $e->getMessage(), ['start' => $start, 'end' => $end, 'perPage' => $perPage]);
+            Log::error('Error finding events in range with pagination: '.$e->getMessage(), ['start' => $start, 'end' => $end, 'perPage' => $perPage]);
 
             throw $e;
         }
@@ -150,11 +150,11 @@ class EventRepository implements EventRepositoryInterface
         try {
             return Event::paginate($perPage);
         } catch (QueryException $e) {
-            Log::error('Database error finding all events with pagination: ' . $e->getMessage(), ['perPage' => $perPage]);
+            Log::error('Database error finding all events with pagination: '.$e->getMessage(), ['perPage' => $perPage]);
 
             throw $e;
         } catch (Exception $e) {
-            Log::error('Error finding all events with pagination: ' . $e->getMessage(), ['perPage' => $perPage]);
+            Log::error('Error finding all events with pagination: '.$e->getMessage(), ['perPage' => $perPage]);
 
             throw $e;
         }
@@ -168,11 +168,11 @@ class EventRepository implements EventRepositoryInterface
         try {
             return Event::where('parent_id', $parentId)->get();
         } catch (QueryException $e) {
-            Log::error('Database error finding recurring events: ' . $e->getMessage(), ['parentId' => $parentId]);
+            Log::error('Database error finding recurring events: '.$e->getMessage(), ['parentId' => $parentId]);
 
             throw $e;
         } catch (Exception $e) {
-            Log::error('Error finding recurring events: ' . $e->getMessage(), ['parentId' => $parentId]);
+            Log::error('Error finding recurring events: '.$e->getMessage(), ['parentId' => $parentId]);
 
             throw $e;
         }
@@ -255,11 +255,11 @@ class EventRepository implements EventRepositoryInterface
                 ->whereBetween('start', [$start, $end])
                 ->paginate($perPage);
         } catch (QueryException $e) {
-            Log::error('Database error getting user events in range with pagination: ' . $e->getMessage(), ['userId' => $userId, 'start' => $start, 'end' => $end, 'perPage' => $perPage]);
+            Log::error('Database error getting user events in range with pagination: '.$e->getMessage(), ['userId' => $userId, 'start' => $start, 'end' => $end, 'perPage' => $perPage]);
 
             throw $e;
         } catch (Exception $e) {
-            Log::error('Error getting user events in range with pagination: ' . $e->getMessage(), ['userId' => $userId, 'start' => $start, 'end' => $end, 'perPage' => $perPage]);
+            Log::error('Error getting user events in range with pagination: '.$e->getMessage(), ['userId' => $userId, 'start' => $start, 'end' => $end, 'perPage' => $perPage]);
 
             throw $e;
         }
@@ -274,11 +274,11 @@ class EventRepository implements EventRepositoryInterface
             return Event::where('user_id', $userId)
                 ->paginate($perPage);
         } catch (QueryException $e) {
-            Log::error('Database error getting all user events with pagination: ' . $e->getMessage(), ['userId' => $userId, 'perPage' => $perPage]);
+            Log::error('Database error getting all user events with pagination: '.$e->getMessage(), ['userId' => $userId, 'perPage' => $perPage]);
 
             throw $e;
         } catch (Exception $e) {
-            Log::error('Error getting all user events with pagination: ' . $e->getMessage(), ['userId' => $userId, 'perPage' => $perPage]);
+            Log::error('Error getting all user events with pagination: '.$e->getMessage(), ['userId' => $userId, 'perPage' => $perPage]);
 
             throw $e;
         }

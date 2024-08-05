@@ -12,6 +12,7 @@ use OpenApi\Annotations as OA;
  *     type="object",
  *     title="Update Event Request",
  *     required={"title", "start", "end", "recurring_pattern"},
+ *
  *     @OA\Property(property="title", type="string", description="Event title"),
  *     @OA\Property(property="description", type="string", description="Event description"),
  *     @OA\Property(property="start", type="string", format="date-time", description="Event start time"),

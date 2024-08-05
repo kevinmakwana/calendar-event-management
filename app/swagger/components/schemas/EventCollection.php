@@ -11,11 +11,14 @@ use OpenApi\Annotations as OA;
  *     schema="EventCollection",
  *     type="object",
  *     title="Event Collection",
+ *
  *     @OA\Property(
  *         property="data",
  *         type="array",
+ *
  *         @OA\Items(ref="#/components/schemas/Event")
  *     ),
+ *
  *     @OA\Property(
  *         property="meta",
  *         type="object",

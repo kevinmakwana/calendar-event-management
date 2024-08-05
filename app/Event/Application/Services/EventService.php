@@ -36,7 +36,7 @@ class EventService
         $event = $this->repository->create($data);
 
         // Handle recurring events
-        if (!empty($data['recurring_pattern'])) {
+        if (! empty($data['recurring_pattern'])) {
             $this->validateRecurrence($end, $data['frequency'], $this->convertToCarbon($data['repeat_until'] ?? null));
             $this->createRecurringEvents($event->id, $data, $start, $end);
         }
@@ -52,7 +52,7 @@ class EventService
     public function getUserEventByIds(int $id, int $userId): Event
     {
         $event = $this->repository->findEventByIdAndUserId($id, $userId);
-        if (!$event) {
+        if (! $event) {
             throw new ModelNotFoundException('Event not found.');
         }
 
@@ -148,7 +148,7 @@ class EventService
      */
     private function validateRecurrence(Carbon $end, string $frequency, ?Carbon $repeatUntil): void
     {
-        if (!in_array($frequency, ['daily', 'weekly', 'monthly', 'yearly'])) {
+        if (! in_array($frequency, ['daily', 'weekly', 'monthly', 'yearly'])) {
             throw ValidationException::withMessages(['frequency' => 'The frequency must be daily, weekly, monthly, or yearly.']);
         }
 
@@ -171,7 +171,7 @@ class EventService
         $initialEnd = $end;
         // $parentId = null;
 
-        while (!$repeatUntil || $currentStart->lessThanOrEqualTo($repeatUntil)) {
+        while (! $repeatUntil || $currentStart->lessThanOrEqualTo($repeatUntil)) {
             $this->repository->checkOverlap($currentStart, $initialEnd, $eventId);
 
             $eventData = array_merge($data, [

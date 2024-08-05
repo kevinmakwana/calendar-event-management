@@ -24,6 +24,7 @@ use Illuminate\Validation\ValidationException;
  *     version="1.0.0",
  *     description="API documentation for the Calendar Event Management system"
  * )
+ *
  * @OA\Server(
  *     url=L5_SWAGGER_CONST_HOST,
  *     description="API Server"
@@ -34,7 +35,7 @@ class EventController extends Controller
     /**
      * Create a new controller instance.
      *
-     * @param EventService $service the service instance to handle event operations
+     * @param  EventService  $service  the service instance to handle event operations
      */
     public function __construct(protected EventService $service) {}
 
@@ -43,38 +44,50 @@ class EventController extends Controller
      *     path="/events",
      *     summary="Get a list of events within the specified range",
      *     tags={"Events"},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(ref="#/components/schemas/IndexEventRequest")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="user_id",
      *         in="query",
      *         required=true,
+     *
      *         @OA\Schema(type="integer"),
      *         description="ID of the user"
      *     ),
+     *
      *     @OA\Parameter(
      *         name="start",
      *         in="query",
+     *
      *         @OA\Schema(type="string", format="date-time"),
      *         description="Start date-time of the range"
      *     ),
+     *
      *     @OA\Parameter(
      *         name="end",
      *         in="query",
+     *
      *         @OA\Schema(type="string", format="date-time"),
      *         description="End date-time of the range"
      *     ),
+     *
      *     @OA\Parameter(
      *         name="per_page",
      *         in="query",
+     *
      *         @OA\Schema(type="integer"),
      *         description="Number of events per page"
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Successful response",
+     *
      *         @OA\JsonContent(ref="#/components/schemas/EventCollection")
      *     )
      * )
@@ -97,19 +110,26 @@ class EventController extends Controller
      *     path="/events",
      *     summary="Store a new event",
      *     tags={"Events"},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(ref="#/components/schemas/CreateEventRequest")
      *     ),
+     *
      *     @OA\Response(
      *         response=201,
      *         description="Event created successfully",
+     *
      *         @OA\JsonContent(ref="#/components/schemas/Event")
      *     ),
+     *
      *     @OA\Response(
      *         response=422,
      *         description="Validation error",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="message", type="string"),
      *             @OA\Property(property="errors", type="object")
      *         )
@@ -132,40 +152,54 @@ class EventController extends Controller
      *     path="/events/{id}",
      *     summary="Update an existing event",
      *     tags={"Events"},
+     *
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer"),
      *         description="ID of the event to update"
      *     ),
+     *
      *     @OA\Parameter(
      *         name="user",
      *         in="query",
      *         required=true,
+     *
      *         @OA\Schema(type="integer"),
      *         description="ID of the user updating the event"
      *     ),
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(ref="#/components/schemas/UpdateEventRequest")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Event updated successfully",
+     *
      *         @OA\JsonContent(ref="#/components/schemas/Event")
      *     ),
+     *
      *     @OA\Response(
      *         response=404,
      *         description="Event not found",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="message", type="string")
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=422,
      *         description="Validation error",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="message", type="string"),
      *             @OA\Property(property="errors", type="object")
      *         )
@@ -191,26 +225,33 @@ class EventController extends Controller
      *     path="/events/{id}",
      *     summary="Delete an event",
      *     tags={"Events"},
+     *
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer"),
      *         description="ID of the event to delete"
      *     ),
+     *
      *     @OA\Parameter(
      *         name="user",
      *         in="query",
      *         required=true,
+     *
      *         @OA\Schema(type="integer"),
      *         description="ID of the user deleting the event"
      *     ),
+     *
      *     @OA\Parameter(
      *         name="deleteSubsequent",
      *         in="query",
+     *
      *         @OA\Schema(type="boolean"),
      *         description="Whether to delete subsequent recurring events"
      *     ),
+     *
      *     @OA\Response(
      *         response=204,
      *         description="Event deleted successfully"
@@ -218,14 +259,19 @@ class EventController extends Controller
      *     @OA\Response(
      *         response=404,
      *         description="Event not found",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="message", type="string")
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=400,
      *         description="Bad request",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="message", type="string")
      *         )
      *     )
@@ -250,7 +296,7 @@ class EventController extends Controller
     /**
      * Handle validation exceptions.
      *
-     * @param ValidationException $e the validation exception
+     * @param  ValidationException  $e  the validation exception
      * @return JsonResponse the response
      */
     private function handleValidationException(ValidationException $e): JsonResponse

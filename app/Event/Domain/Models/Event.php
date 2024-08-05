@@ -73,8 +73,8 @@ class Event extends Model
     protected function start(): Attribute
     {
         return Attribute::make(
-            get: fn(string $value) => Carbon::parse($value)->toIso8601String(),
-            set: fn(string $value) => Carbon::parse($value)->toIso8601String(),
+            get: fn (string $value) => Carbon::parse($value)->toIso8601String(),
+            set: fn (string $value) => Carbon::parse($value)->toIso8601String(),
         );
     }
 
@@ -84,8 +84,8 @@ class Event extends Model
     protected function end(): Attribute
     {
         return Attribute::make(
-            get: fn(string $value) => Carbon::parse($value)->toIso8601String(),
-            set: fn(string $value) => Carbon::parse($value)->toIso8601String(),
+            get: fn (string $value) => Carbon::parse($value)->toIso8601String(),
+            set: fn (string $value) => Carbon::parse($value)->toIso8601String(),
         );
     }
 
@@ -95,8 +95,8 @@ class Event extends Model
     protected function repeatUntil(): Attribute
     {
         return Attribute::make(
-            get: fn(?string $value) => $value ? Carbon::parse($value)->toIso8601String() : null,
-            set: fn(?string $value) => $value ? Carbon::parse($value)->toIso8601String() : null,
+            get: fn (?string $value) => $value ? Carbon::parse($value)->toIso8601String() : null,
+            set: fn (?string $value) => $value ? Carbon::parse($value)->toIso8601String() : null,
         );
     }
 

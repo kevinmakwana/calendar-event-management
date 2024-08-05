@@ -29,7 +29,7 @@ test('user can list paginated events in a specific time range', function () {
     ]);
 
     $response = $this->getJson(
-        route('events.index', ['user_id' => $this->user->id]) . '&start=' . now()->toDateTimeString() . '&end=' . now()->addDays(7)->toDateTimeString()
+        route('events.index', ['user_id' => $this->user->id]).'&start='.now()->toDateTimeString().'&end='.now()->addDays(7)->toDateTimeString()
     );
 
     $response->assertStatus(200)
@@ -60,14 +60,14 @@ test('user gets empty array of data when no events match the date range', functi
     ]);
 
     $this->getJson(
-        route('events.index', ['user_id' => $this->user->id]) . '&start=' . now()->toDateTimeString() . '&end=' . now()->addDays(5)->toDateTimeString()
+        route('events.index', ['user_id' => $this->user->id]).'&start='.now()->toDateTimeString().'&end='.now()->addDays(5)->toDateTimeString()
     )
         ->assertStatus(200)
         ->assertJson([
             'data' => [],
             'links' => [
-                'first' => route('events.index') . '?page=1',
-                'last' => route('events.index') . '?page=1',
+                'first' => route('events.index').'?page=1',
+                'last' => route('events.index').'?page=1',
                 'prev' => null,
                 'next' => null,
             ],
@@ -82,7 +82,7 @@ test('user gets empty array of data when no events match the date range', functi
                         'active' => false,
                     ],
                     [
-                        'url' => route('events.index') . '?page=1',
+                        'url' => route('events.index').'?page=1',
                         'label' => '1',
                         'active' => true,
                     ],
@@ -106,7 +106,7 @@ test('user can list paginated events', function () {
     ])->count(25)->create();
 
     $this->getJson(
-        route('events.index', ['user_id' => $this->user->id]) . '&per_page=10'
+        route('events.index', ['user_id' => $this->user->id]).'&per_page=10'
     )
         ->assertStatus(200)
         ->assertJsonStructure([

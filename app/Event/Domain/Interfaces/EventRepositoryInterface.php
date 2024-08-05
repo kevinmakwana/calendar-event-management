@@ -14,7 +14,7 @@ interface EventRepositoryInterface
     /**
      * Create a new event.
      *
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     public function create(array $data): Event;
 
@@ -26,7 +26,7 @@ interface EventRepositoryInterface
     /**
      * Update an existing event.
      *
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     public function update(Event $event, array $data): bool;
 

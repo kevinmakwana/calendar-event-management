@@ -11,6 +11,7 @@ use OpenApi\Annotations as OA;
  *     schema="Event",
  *     type="object",
  *     title="Event",
+ *
  *     @OA\Property(property="id", type="integer", description="Event ID"),
  *     @OA\Property(property="title", type="string", description="Event title"),
  *     @OA\Property(property="description", type="string", description="Event description"),

@@ -24,7 +24,7 @@ class EventServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // App\Event\Presentation\API
-        $this->loadRoutesFrom(__DIR__ . '/../../Presentation/API/routes.php');
+        $this->loadRoutesFrom(__DIR__.'/../../Presentation/API/routes.php');
 
         $this->loadMigrationsFrom([
             database_path('migrations'),

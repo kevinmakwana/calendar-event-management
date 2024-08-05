@@ -12,6 +12,7 @@ use OpenApi\Annotations as OA;
  *     type="object",
  *     title="Index Event Request",
  *     required={"user_id"},
+ *
  *     @OA\Property(
  *         property="user_id",
  *         type="integer",
