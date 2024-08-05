@@ -2,6 +2,7 @@ services:
     mysql:
         container_name: "${COMPOSE_PROJECT_NAME}-mysql"
         image: mysql:8.0.37
+        platform: linux/amd64
         volumes:
         - mysql-data:/var/lib/mysql
         - ./docker/mysql/init:/docker-entrypoint-initdb.d
@@ -19,9 +20,11 @@ services:
         restart: unless-stopped
         networks:
         - default
+
     mysql-test:
         container_name: "${COMPOSE_PROJECT_NAME}-mysql-test"
         image: mysql:8.0.37
+        platform: linux/amd64
         volumes:
         # - mysql-test-data:/var/lib/mysql
         - ./docker/mysql/init:/docker-entrypoint-initdb.d
@@ -45,6 +48,7 @@ services:
         container_name: "${COMPOSE_PROJECT_NAME}-nginx"
         build:
             context: docker/nginx
+        platform: linux/amd64
         working_dir: /var/www/html
         volumes:
             - .:/var/www/html
@@ -59,6 +63,7 @@ services:
         container_name: "${COMPOSE_PROJECT_NAME}-php-fpm-debug"
         build:
             context: docker/php-fpm
+        platform: linux/amd64
         working_dir: /var/www/html
         volumes:
             - .:/var/www/html
@@ -71,6 +76,7 @@ services:
     ## The PHP-FPM that's used for unit tests and could possibly be used for production instances
     php-fpm:
         container_name: "${COMPOSE_PROJECT_NAME}-php-fpm"
+        platform: linux/amd64
         build:
             context: docker/php-fpm
             target: base
