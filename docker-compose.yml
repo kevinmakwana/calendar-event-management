@@ -17,6 +17,8 @@ services:
         - "--character-set-server=utf8mb4"
         - "--collation-server=utf8mb4_unicode_ci"
         restart: unless-stopped
+        networks:
+        - default
     mysql-test:
         container_name: "${COMPOSE_PROJECT_NAME}-mysql-test"
         image: mysql:8.0.37
@@ -35,6 +37,8 @@ services:
         - "--character-set-server=utf8mb4"
         - "--collation-server=utf8mb4_unicode_ci"
         restart: unless-stopped
+        networks:
+        - default
 
     ## NGINX to support the app, configured to use the php-fpm-debug server
     nginx:
