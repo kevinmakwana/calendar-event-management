@@ -30,6 +30,7 @@ jobs:
           curl -L -o mkcert https://dl.filippo.io/mkcert/latest/mkcert-linux-amd64
           chmod +x mkcert
           sudo mv mkcert /usr/local/bin/mkcert
+          mkcert --version # Verify installation
 
       - name: Generate local CA and SSL certificates
         run: |
