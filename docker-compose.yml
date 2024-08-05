@@ -5,6 +5,7 @@ services:
         volumes:
         - mysql-data:/var/lib/mysql
         - ./docker/mysql/init:/docker-entrypoint-initdb.d
+        - ./docker/mysql/config/my.cnf:/etc/mysql/my.cnf
         environment:
             MYSQL_ROOT_PASSWORD: password
             MYSQL_DATABASE: calendar
@@ -22,6 +23,7 @@ services:
         volumes:
         # - mysql-test-data:/var/lib/mysql
         - ./docker/mysql/init:/docker-entrypoint-initdb.d
+        - ./docker/mysql/config/my.cnf:/etc/mysql/my.cnf
         environment:
             MYSQL_ROOT_PASSWORD: password
             MYSQL_DATABASE: calendar
