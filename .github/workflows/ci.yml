@@ -21,11 +21,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Set up Docker Cache
-        uses: docker/cache-action@v2
-        with:
-          path: /tmp/.buildx-cache
-
       - name: Build Docker images
         run: docker-compose build
 
