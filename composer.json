@@ -59,7 +59,8 @@
             "@post-root-package-install",
             "@key-generate",
             "@php artisan migrate --seed",
-            "@ide-helper-update"
+            "@ide-helper-update",
+            "vendor/bin/pest"
         ],
         "ide-helper-update": [
             "@php artisan clear-compiled",

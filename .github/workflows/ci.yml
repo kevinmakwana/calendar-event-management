@@ -101,10 +101,6 @@ jobs:
         run: |
           docker-compose exec -T php-fpm-debug /bin/sh -c "composer run dev"
 
-      - name: Run tests
-        run: |
-          docker-compose exec -T php-fpm-debug /bin/sh -c "vendor/bin/pest --stop-on-error --stop-on-failure"
-
       - name: Stop and remove Docker services
         if: always()
         run: docker-compose -f docker-compose.yml down --volumes --remove-orphans
