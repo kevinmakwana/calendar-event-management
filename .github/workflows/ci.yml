@@ -98,9 +98,9 @@ jobs:
         run: |
           docker-compose exec -T php-fpm-debug /bin/sh -c "composer run post-root-package-install"
 
-      - name: generate key
+      - name: Generate application key
         run: |
-          docker-compose exec -T php-fpm-debug /bin/sh -c "composer run key-generate"
+          docker-compose exec -T php-fpm-debug /bin/sh -c "php artisan key:generate"
 
       - name: Run migrations
         run: |
