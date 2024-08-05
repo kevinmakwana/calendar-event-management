@@ -12,7 +12,7 @@ jobs:
 
     env:
       DOCKER_SERVER_NAME: api.calendar-event-management.test
-      DOCKER_MYSQL_LOCAL_PORT: 3307
+      DOCKER_MYSQL_LOCAL_PORT: 3306
       DOCKER_NGINX_LOCAL_PORT: 443
       DB_CONNECTION: mysql
       DB_DATABASE: calendar
@@ -71,7 +71,7 @@ jobs:
 
       - name: Run migrations
         run: |
-          docker-compose run --rm -e DB_CONNECTION=mysql -e DB_HOST=mysql-test -e DB_PORT=3307 -e DB_DATABASE=calendar -e DB_USERNAME=app -e DB_PASSWORD=app php-fpm-debug php artisan migrate:fresh --seed --force
+          docker-compose run --rm -e DB_CONNECTION=mysql -e DB_HOST=mysql -e DB_PORT=3306 -e DB_DATABASE=calendar -e DB_USERNAME=app -e DB_PASSWORD=app php-fpm-debug php artisan migrate:fresh --seed --force
 
       - name: Run tests
         run: |
