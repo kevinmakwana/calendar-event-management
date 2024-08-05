@@ -53,6 +53,12 @@ jobs:
           docker-compose -f docker-compose.yml up -d
           docker-compose -f docker-compose.yml logs --tail=100
 
+      - name: View php-fpm-debug logs
+        run: docker-compose -f docker-compose.yml logs php-fpm-debug
+
+      - name: List running Docker containers
+        run: docker-compose -f docker-compose.yml ps
+
       - name: Wait for MySQL services to be ready
         run: |
           echo "Waiting for mysql service to be ready..."
@@ -77,12 +83,27 @@ jobs:
             fi
           done
 
+      - name: Wait for php-fpm-debug service to be ready
+        run: |
+          echo "Waiting for php-fpm-debug service to be ready..."
+          for i in {1..60}; do
+            if docker-compose exec -T php-fpm-debug /bin/sh -c "echo 'Service is up!'"; then
+              echo "php-fpm-debug service is ready!"
+              break
+            else
+              echo "php-fpm-debug service is not ready yet, retrying..."
+              sleep 5
+            fi
+          done
+
       - name: Install Composer dependencies
         run: |
           docker-compose exec -T php-fpm-debug /bin/sh -c "composer install --prefer-dist --no-progress --no-interaction"
+
       - name: Run Composer Dev setup
         run: |
           docker-compose exec -T php-fpm-debug /bin/sh -c "composer run dev"
+
       - name: Run tests
         run: |
           docker-compose exec -T php-fpm-debug /bin/sh -c "composer run ci"
