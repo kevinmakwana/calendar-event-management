@@ -45,6 +45,11 @@ jobs:
         run: |
           docker-compose -f docker-compose.yml up -d
 
+      - name: Wait for services to be ready
+        run: |
+          sleep 30
+          docker-compose -f docker-compose.yml ps
+
       - name: Copy .env file
         run: |
           docker-compose -f docker-compose.yml exec -T php-fpm-debug /bin/sh -c "cp .env.example .env"
