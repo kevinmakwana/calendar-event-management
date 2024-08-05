@@ -39,9 +39,9 @@ services:
         container_name: "${COMPOSE_PROJECT_NAME}-nginx"
         build:
             context: docker/nginx
-        working_dir: /app
+        working_dir: /var/www/html
         volumes:
-            - .:/app
+            - .:/var/www/html
         ports:
             - "${DOCKER_NGINX_LOCAL_PORT}:443"
         depends_on:
@@ -53,9 +53,9 @@ services:
         container_name: "${COMPOSE_PROJECT_NAME}-php-fpm-debug"
         build:
             context: docker/php-fpm
-        working_dir: /app
+        working_dir: /var/www/html
         volumes:
-            - .:/app
+            - .:/var/www/html
         depends_on:
             - mysql
         environment:
@@ -70,9 +70,9 @@ services:
             target: base
             tags: # required for Docker buildx/bake to tag properly
                 - "${COMPOSE_PROJECT_NAME}-php-fpm"
-        working_dir: /app
+        working_dir: /var/www/html
         volumes:
-            - .:/app
+            - .:/var/www/html
         depends_on:
             - mysql
         environment:
