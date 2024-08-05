@@ -23,7 +23,7 @@ COPY --from=composer:2.7.6 /usr/bin/composer /usr/bin/composer
 WORKDIR /app
 
 # Copy the Composer files
-COPY composer.json composer.lock ./
+COPY composer.json ./
 
 # Install PHP dependencies
 RUN composer install --no-interaction --no-plugins --no-scripts
