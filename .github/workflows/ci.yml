@@ -46,18 +46,13 @@ jobs:
         run: |
           mkcert -install
           mkcert -cert-file docker/nginx/ssl.pem -key-file docker/nginx/key.pem api.calendar-event-management.test
-
+  
       - name: Build and start docker services
         run: |
           docker-compose -f docker-compose.yml build --no-cache
           docker-compose -f docker-compose.yml up -d
-
-      - name: View php-fpm-debug logs
-        run: docker-compose -f docker-compose.yml logs php-fpm-debug
-
-      - name: List running Docker containers
-        run: docker-compose -f docker-compose.yml ps
-
+          docker-compose -f docker-compose.yml ps
+          docker-compose -f docker-compose.yml logs php-fpm-debug
       - name: Wait for MySQL services to be ready
         run: |
           echo "Waiting for mysql service to be ready..."
@@ -81,7 +76,7 @@ jobs:
               sleep 5
             fi
           done
-
+          
       - name: Wait for php-fpm-debug service to be ready
         run: |
           echo "Waiting for php-fpm-debug service to be ready..."
@@ -94,18 +89,16 @@ jobs:
               sleep 5
             fi
           done
-
+          
       - name: Install Composer dependencies
         run: |
           docker-compose exec -T php-fpm-debug /bin/sh -c "composer install --prefer-dist --no-progress --no-interaction"
-
       - name: Run Composer Dev setup
         run: |
           docker-compose exec -T php-fpm-debug /bin/sh -c "composer run dev"
-
       - name: Run tests
         run: |
-          docker-compose exec -T php-fpm-debug /bin/sh -c "composer run pest"
+          docker-compose exec -T php-fpm-debug /bin/sh -c "composer run ci"
 
       - name: Stop and remove services
         if: always()
