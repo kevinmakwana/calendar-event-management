@@ -22,6 +22,9 @@ COPY --from=composer:2.7.6 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
+# Copy the rest of the application files
+COPY . .
+
 # Install PHP dependencies
 RUN composer install --no-interaction --no-plugins --no-scripts
 
