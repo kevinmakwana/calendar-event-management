@@ -78,7 +78,7 @@
         ],
         "test": [
             "@putenv DB_HOST=mysql-test",
-            "vendor/bin/pest --stop-on-error --stop-on-failure --parallel --compact"
+            "vendor/bin/pest --stop-on-error --stop-on-failure --compact"
         ],
         "check": [
             "@pint",

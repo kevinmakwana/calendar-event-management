@@ -75,7 +75,7 @@ jobs:
 
       - name: Run tests
         run: |
-          docker-compose exec -T php-fpm-debug vendor/bin/pest
+          docker-compose exec -T php-fpm-debug /bin/sh -c "composer test"
 
       - name: Stop and remove services
         if: always()
