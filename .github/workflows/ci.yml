@@ -49,6 +49,7 @@ jobs:
       - name: Build docker services
         run: |
           docker-compose -f docker-compose.yml build --no-cache
+          docker-compose -f docker-compose.yml logs --tail=100
 
       - name: Start docker services
         run: |
@@ -83,16 +84,16 @@ jobs:
       - name: Print MySQL logs
         run: |
           echo "Printing MySQL logs..."
-          docker-compose logs mysql
+          docker-compose logs --tail=100 mysql
 
       - name: Print MySQL Test logs
         run: |
           echo "Printing MySQL Test logs..."
-          docker-compose logs mysql-test
+          docker-compose logs --tail=100 mysql-test
 
       - name: Install Composer dependencies
         run: |
-          docker-compose exec -T php-fpm-debug /bin/sh -c "composer install"
+          docker-compose exec -T php-fpm-debug /bin/sh -c "composer install --prefer-dist --no-progress --no-interaction"
 
       - name: Run migrations
         run: |
@@ -101,16 +102,16 @@ jobs:
       - name: Print migration logs
         run: |
           echo "Printing migration logs..."
-          docker-compose logs php-fpm-debug
+          docker-compose logs --tail=100 php-fpm-debug
 
       - name: Run tests
         run: |
-          docker-compose exec -T php-fpm-debug vendor/bin/pest
+          docker-compose exec -T php-fpm-debug vendor/bin/pest --verbose
 
       - name: Print test logs
         run: |
           echo "Printing test logs..."
-          docker-compose logs php-fpm-debug
+          docker-compose logs --tail=100 php-fpm-debug
 
       - name: Stop and remove services
         if: always()
