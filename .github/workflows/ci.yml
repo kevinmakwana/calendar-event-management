@@ -30,7 +30,7 @@ jobs:
           curl -L -o mkcert https://dl.filippo.io/mkcert/latest?for=linux/amd64
           chmod +x mkcert
           sudo mv mkcert /usr/local/bin/mkcert
-          /usr/local/bin/mkcert --version # Verify installation
+          mkcert --version # Verify installation
 
       - name: Generate local CA and SSL certificates
         run: |
@@ -38,6 +38,10 @@ jobs:
           mkcert -cert-file docker/nginx/ssl.pem -key-file docker/nginx/key.pem api.calendar-event-management.test
 
       - name: Build and start services
+        env:
+          DOCKER_SERVER_NAME: api.calendar-event-management.test
+          DOCKER_MYSQL_LOCAL_PORT: 3306
+          DOCKER_NGINX_LOCAL_PORT: 443
         run: |
           docker-compose -f docker-compose.yml up -d
 
