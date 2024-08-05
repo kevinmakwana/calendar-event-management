@@ -48,7 +48,7 @@ jobs:
 
       - name: Start docker services
         run: |
-          docker-compose docker-compose.yml up -d
+          docker-compose -f docker-compose.yml up -d
       
       - name: Install Composer dependencies
         run: |
