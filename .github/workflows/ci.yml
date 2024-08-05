@@ -30,9 +30,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libnss3-tools
-          curl -L -o mkcert https://dl.filippo.io/mkcert/latest/mkcert-linux-amd64
-          chmod +x mkcert
-          sudo mv mkcert /usr/local/bin/mkcert
+          curl -L -o /usr/local/bin/mkcert https://dl.filippo.io/mkcert/latest/mkcert-linux-amd64
+          sudo chmod +x /usr/local/bin/mkcert
 
       - name: Generate local CA and SSL certificates
         run: |
