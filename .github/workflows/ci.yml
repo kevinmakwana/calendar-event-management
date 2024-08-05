@@ -7,7 +7,7 @@ on:
     branches: ["*"]
 
 jobs:
-  laravel-tests:
+  calendar-event-management-tests:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,10 +27,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libnss3-tools
-          curl -L -o mkcert https://dl.filippo.io/mkcert/latest/mkcert-linux-amd64
+          curl -L -o mkcert https://dl.filippo.io/mkcert/latest?for=linux/amd64
           chmod +x mkcert
           sudo mv mkcert /usr/local/bin/mkcert
-          mkcert --version # Verify installation
+          /usr/local/bin/mkcert --version # Verify installation
 
       - name: Generate local CA and SSL certificates
         run: |
@@ -56,3 +56,4 @@ jobs:
       - name: Stop and remove services
         if: always()
         run: docker-compose -f docker-compose.yml down
+        
