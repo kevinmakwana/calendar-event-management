@@ -101,10 +101,12 @@
             "@php vendor/bin/rector process"
         ],
         "pre-commit": [
+            "Composer\\Config::disableProcessTimeout",
             "@pint",
             "@phpmd",
             "@larastan",
-            "@security-checker"
+            "@security-checker",
+            "@composer larastan"
         ],
         "pre-push": [
             "@pest"
