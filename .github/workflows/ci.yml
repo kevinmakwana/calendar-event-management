@@ -11,6 +11,16 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    env:
+      DOCKER_SERVER_NAME: api.calendar-event-management.test
+      DOCKER_MYSQL_LOCAL_PORT: 3306
+      DOCKER_NGINX_LOCAL_PORT: 443
+      DB_CONNECTION: mysql
+      DB_DATABASE: calendar
+      DB_USERNAME: app
+      DB_PASSWORD: app
+      DB_HOST: mysql-test
+
     steps:
     - uses: shivammathur/setup-php@v2
       with:
@@ -23,10 +33,4 @@ jobs:
     - name: Generate key
       run: php artisan key:generate
     - name: Execute tests (Unit and Feature tests) via pest
-      env:
-        DB_PORT: 3306
-        DB_CONNECTION: mysql
-        DB_DATABASE: calendar
-        DB_USERNAME: app
-        DB_PASSWORD: app
       run: vendor/bin/pest
