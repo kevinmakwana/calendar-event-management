@@ -33,4 +33,4 @@ jobs:
     - name: Generate key
       run: php artisan key:generate
     - name: Execute tests (Unit and Feature tests) via pest
-      run: vendor/bin/pest
+      run: docker-compose exec -T php-fpm-debug /bin/sh -c "vendor/bin/pest"
