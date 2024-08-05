@@ -60,7 +60,7 @@
             "@key-generate",
             "@php artisan migrate --seed",
             "@ide-helper-update",
-            "vendor/bin/pest"
+            "@ci"
         ],
         "ide-helper-update": [
             "@php artisan clear-compiled",
