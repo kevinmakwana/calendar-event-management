@@ -89,7 +89,7 @@ jobs:
               sleep 5
             fi
           done
-          
+
       - name: Install Composer dependencies
         run: |
           docker-compose exec -T php-fpm-debug /bin/sh -c "composer install --prefer-dist --no-progress --no-interaction"
@@ -98,7 +98,7 @@ jobs:
           docker-compose exec -T php-fpm-debug /bin/sh -c "composer run dev"
       - name: Run tests
         run: |
-          docker-compose exec -T php-fpm-debug /bin/sh -c "composer run ci"
+          docker-compose exec -T php-fpm-debug /bin/sh -c "vendor/bin/pest --stop-on-error --stop-on-failure"
 
       - name: Stop and remove services
         if: always()
