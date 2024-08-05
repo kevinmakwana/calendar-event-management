@@ -14,6 +14,10 @@ jobs:
       DOCKER_SERVER_NAME: api.calendar-event-management.test
       DOCKER_MYSQL_LOCAL_PORT: 3306
       DOCKER_NGINX_LOCAL_PORT: 443
+      DB_CONNECTION: mysql
+      DB_DATABASE: calendar
+      DB_USERNAME: app
+      DB_PASSWORD: app
 
     steps:
       - name: Checkout code
@@ -63,6 +67,19 @@ jobs:
             fi
           done
 
+      - name: Wait for MySQL Test to be ready
+        run: |
+          echo "Waiting for MySQL Test to be ready..."
+          for i in {1..60}; do
+            if docker-compose exec -T mysql-test mysqladmin ping --silent; then
+              echo "MySQL Test is ready!"
+              break
+            else
+              echo "MySQL Test is not ready yet, retrying..."
+              sleep 5
+            fi
+          done
+
       - name: Print MySQL logs
         run: |
           echo "Printing MySQL logs..."
@@ -78,7 +95,8 @@ jobs:
           docker-compose exec -T php-fpm-debug /bin/sh -c "composer install"
 
       - name: Run migrations
-        run: docker-compose run --rm -e DB_CONNECTION=mysql -e DB_HOST=mysql -e DB_PORT=3306 -e DB_DATABASE=calendar -e DB_USERNAME=root -e DB_PASSWORD=password php-fpm-debug php artisan migrate:fresh --seed --force
+        run: |
+          docker-compose run --rm -e DB_CONNECTION=mysql -e DB_HOST=mysql-test -e DB_PORT=3306 -e DB_DATABASE=calendar -e DB_USERNAME=app -e DB_PASSWORD=app php-fpm-debug php artisan migrate:fresh --seed --force
 
       - name: Print migration logs
         run: |
@@ -86,13 +104,6 @@ jobs:
           docker-compose logs php-fpm-debug
 
       - name: Run tests
-        env:
-          DB_CONNECTION: mysql
-          DB_HOST: mysql
-          DB_PORT: 3306
-          DB_DATABASE: calendar
-          DB_USERNAME: root
-          DB_PASSWORD: password
         run: |
           docker-compose exec -T php-fpm-debug /bin/sh -c "composer test"
 
