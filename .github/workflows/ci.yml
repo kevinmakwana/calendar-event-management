@@ -2,13 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [ "*" ]
+    branches: ["*"]
   pull_request:
-    branches: [ "*" ]
+    branches: ["*"]
 
 jobs:
-  laravel-tests:
-
+  calendar-event-management-tests:
     runs-on: ubuntu-latest
 
     env:
@@ -19,18 +18,88 @@ jobs:
       DB_DATABASE: calendar
       DB_USERNAME: app
       DB_PASSWORD: app
-      DB_HOST: mysql-test
+      DB_HOST: mysql-test # Pointing to mysql-test service
 
     steps:
-    - uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.2'
-    - uses: actions/checkout@v3
-    - name: Copy .env
-      run: php -r "file_exists('.env') || copy('.env.example', '.env');"
-    - name: Install Dependencies
-      run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist --ignore-platform-reqs
-    - name: Generate key
-      run: php artisan key:generate
-    - name: Execute tests (Unit and Feature tests) via pest
-      run: docker-compose exec -T php-fpm-debug /bin/sh -c "vendor/bin/pest"
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+
+      - name: Install mkcert
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnss3-tools
+          curl -L -o mkcert https://dl.filippo.io/mkcert/latest?for=linux/amd64
+          chmod +x mkcert
+          sudo mv mkcert /usr/local/bin/mkcert
+          mkcert --version # Verify installation
+
+      - name: Generate local CA and SSL certificates
+        run: |
+          mkcert -install
+          mkcert -cert-file docker/nginx/ssl.pem -key-file docker/nginx/key.pem api.calendar-event-management.test
+  
+      - name: Build and start docker services
+        run: |
+          docker-compose -f docker-compose.yml build --no-cache
+          docker-compose -f docker-compose.yml up -d
+          docker-compose -f docker-compose.yml ps
+          docker-compose -f docker-compose.yml logs php-fpm-debug
+      - name: Wait for MySQL services to be ready
+        run: |
+          echo "Waiting for mysql service to be ready..."
+          for i in {1..60}; do
+            if docker-compose exec -T mysql mysqladmin ping --silent; then
+              echo "MySQL service is ready!"
+              break
+            else
+              echo "MySQL service is not ready yet, retrying..."
+              sleep 5
+            fi
+          done
+
+          echo "Waiting for mysql-test service to be ready..."
+          for i in {1..60}; do
+            if docker-compose exec -T mysql-test mysqladmin ping --silent; then
+              echo "MySQL-test service is ready!"
+              break
+            else
+              echo "MySQL-test service is not ready yet, retrying..."
+              sleep 5
+            fi
+          done
+          
+      - name: Wait for php-fpm-debug service to be ready
+        run: |
+          echo "Waiting for php-fpm-debug service to be ready..."
+          for i in {1..60}; do
+            if docker-compose exec -T php-fpm-debug /bin/sh -c "echo 'Service is up!'"; then
+              echo "php-fpm-debug service is ready!"
+              break
+            else
+              echo "php-fpm-debug service is not ready yet, retrying..."
+              sleep 5
+            fi
+          done
+
+      - name: Install Composer dependencies
+        run: |
+          docker-compose exec -T php-fpm-debug /bin/sh -c "composer install --prefer-dist --no-progress --no-interaction"
+      - name: Run Composer Dev setup
+        run: |
+          docker-compose exec -T php-fpm-debug /bin/sh -c "composer run dev"
+      - name: Run tests
+        run: |
+          docker-compose exec -T php-fpm-debug /bin/sh -c "vendor/bin/pest --stop-on-error --stop-on-failure"
+
+      - name: Stop and remove services
+        if: always()
+        run: docker-compose -f docker-compose.yml down --volumes --remove-orphans
