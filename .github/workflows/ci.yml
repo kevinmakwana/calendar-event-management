@@ -94,13 +94,9 @@ jobs:
         run: |
           docker-compose exec -T php-fpm-debug /bin/sh -c "composer install"
 
-      - name: copy env file
+      - name: Install Composer dependencies
         run: |
-          docker-compose exec -T php-fpm-debug /bin/sh -c "composer run post-root-package-install"
-
-      - name: Generate application key
-        run: |
-          docker-compose exec -T php-fpm-debug /bin/sh -c "php artisan key:generate"
+          docker-compose exec -T php-fpm-debug /bin/sh -c "composer post-root-package-install"
 
       - name: Run migrations
         run: |
