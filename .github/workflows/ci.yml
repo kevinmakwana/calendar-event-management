@@ -7,61 +7,66 @@ on:
     branches: ["*"]
 
 jobs:
-  laravel-tests:
+  docker-build-and-test:
     runs-on: ubuntu-latest
-
     services:
-      mysql:
-        image: mysql:8.0.37
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
-        env:
-          MYSQL_ROOT_PASSWORD: password
-          MYSQL_DATABASE: calendar
-          MYSQL_USER: app
-          MYSQL_PASSWORD: app
+      docker:
+        image: docker:20.10-dind
+        options: --privileged
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Set up Docker Cache
+        uses: docker/cache-action@v2
         with:
-          php-version: '8.2'
-          extensions: mbstring, xml, pdo_mysql, redis
-          coverage: none
+          path: /tmp/.buildx-cache
+
+      - name: Build Docker images
+        run: docker-compose build
+
+      - name: Start Docker containers
+        run: docker-compose up -d
+
+      - name: Wait for MySQL to be ready
+        run: |
+          until docker-compose exec -T mysql mysqladmin ping --silent; do
+            echo "Waiting for MySQL..."
+            sleep 1
+          done
 
       - name: Copy .env
         run: cp .env.example .env
 
       - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-interaction --no-scripts --no-progress
+        run: docker-compose run --rm php-fpm-debug composer install --prefer-dist --no-interaction --no-scripts --no-progress
 
       - name: Generate application key
-        run: php artisan key:generate
+        run: docker-compose run --rm php-fpm-debug php artisan key:generate
 
       - name: Run migrations
         env:
           DB_CONNECTION: mysql
-          DB_HOST: 127.0.0.1
+          DB_HOST: mysql
           DB_PORT: 3306
           DB_DATABASE: calendar
           DB_USERNAME: root
           DB_PASSWORD: password
-        run: php artisan migrate --force
+        run: docker-compose run --rm php-fpm-debug php artisan migrate --force
 
       - name: Run tests
         env:
           DB_CONNECTION: mysql
-          DB_HOST: 127.0.0.1
+          DB_HOST: mysql
           DB_PORT: 3306
           DB_DATABASE: calendar
           DB_USERNAME: root
           DB_PASSWORD: password
-        run: vendor/bin/pest --stop-on-error --stop-on-failure --parallel --compact
+        run: docker-compose run --rm php-fpm-debug vendor/bin/pest --stop-on-error --stop-on-failure --parallel --compact
 
+      - name: Stop and remove Docker containers
+        run: docker-compose down
