@@ -18,21 +18,6 @@ jobs:
       DB_USERNAME: app
       DB_PASSWORD: app
       DB_HOST: mysql-test # Pointing to mysql-test service
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ALLOW_EMPTY_PASSWORD: false
-          MYSQL_ROOT_PASSWORD: password
-          MYSQL_DATABASE: calendar
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-      mysql-test:
-        image: mysql:8.0
-        env:
-          MYSQL_ALLOW_EMPTY_PASSWORD: false
-          MYSQL_ROOT_PASSWORD: password
-          MYSQL_DATABASE: calendar
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
     strategy:
       fail-fast: false
       matrix:
