@@ -94,6 +94,14 @@ jobs:
         run: |
           docker-compose exec -T php-fpm-debug /bin/sh -c "composer install"
 
+      - name: copy env file
+        run: |
+          docker-compose exec -T php-fpm-debug /bin/sh -c "composer run post-root-package-install"
+
+      - name: generate key
+        run: |
+          docker-compose exec -T php-fpm-debug /bin/sh -c "composer run key-generate"
+
       - name: Run migrations
         run: |
           docker-compose run --rm -e DB_CONNECTION=mysql -e DB_HOST=mysql-test -e DB_PORT=3306 -e DB_DATABASE=calendar -e DB_USERNAME=app -e DB_PASSWORD=app php-fpm-debug php artisan migrate:fresh --seed --force
