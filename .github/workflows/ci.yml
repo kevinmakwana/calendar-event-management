@@ -7,12 +7,8 @@ on:
     branches: ["*"]
 
 jobs:
-  docker-build-and-test:
+  calendar-event-management-tests:
     runs-on: ubuntu-latest
-    services:
-      docker:
-        image: docker:20.10-dind
-        options: --privileged
 
     steps:
       - name: Checkout code
@@ -25,60 +21,34 @@ jobs:
         run: |
           sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
-      
+          docker-compose --version
+
       - name: Install mkcert
         run: |
           sudo apt-get update
           sudo apt-get install -y libnss3-tools
-          curl -L -o /usr/local/bin/mkcert https://dl.filippo.io/mkcert/latest/mkcert-linux-amd64
-          sudo chmod +x /usr/local/bin/mkcert
+          curl -L -o mkcert https://dl.filippo.io/mkcert/latest?for=linux/amd64
+          chmod +x mkcert
+          sudo mv mkcert /usr/local/bin/mkcert
+          mkcert --version # Verify installation
 
       - name: Generate local CA and SSL certificates
         run: |
           mkcert -install
           mkcert -cert-file docker/nginx/ssl.pem -key-file docker/nginx/key.pem api.calendar-event-management.test
 
-      - name: Build Docker images
-        run: docker-compose build --no-cache
-
-      - name: Start Docker containers
-        run: docker-compose up -d
-
-      - name: Wait for MySQL to be ready
-        run: |
-          until docker-compose exec -T mysql mysqladmin ping --silent; do
-            echo "Waiting for MySQL..."
-            sleep 1
-          done
-
-      - name: Copy .env
-        run: cp .env.example .env
-
-      - name: Install Composer dependencies
-        run: docker-compose run --rm php-fpm-debug composer install --prefer-dist --no-interaction --no-scripts --no-progress
-
-      - name: Generate application key
-        run: docker-compose run --rm php-fpm-debug php artisan key:generate
-
-      - name: Run migrations
+      - name: Build and start services
         env:
-          DB_CONNECTION: mysql
-          DB_HOST: mysql
-          DB_PORT: 3306
-          DB_DATABASE: calendar
-          DB_USERNAME: root
-          DB_PASSWORD: password
-        run: docker-compose run --rm php-fpm-debug php artisan migrate --force
+          DOCKER_SERVER_NAME: api.calendar-event-management.test
+          DOCKER_MYSQL_LOCAL_PORT: 3306
+          DOCKER_NGINX_LOCAL_PORT: 443
+        run: |
+          docker-compose -f docker-compose.yml up -d
 
       - name: Run tests
-        env:
-          DB_CONNECTION: mysql
-          DB_HOST: mysql
-          DB_PORT: 3306
-          DB_DATABASE: calendar
-          DB_USERNAME: root
-          DB_PASSWORD: password
-        run: docker-compose run --rm php-fpm-debug vendor/bin/pest --stop-on-error --stop-on-failure --parallel --compact
+        run: |
+          docker-compose -f docker-compose.yml exec -T php-fpm-debug /bin/sh -c "composer test"
 
-      - name: Stop and remove Docker containers
-        run: docker-compose down
+      - name: Stop and remove services
+        if: always()
+        run: docker-compose -f docker-compose.yml down
