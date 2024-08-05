@@ -45,9 +45,17 @@ jobs:
         run: |
           docker-compose -f docker-compose.yml up -d
 
+      - name: Copy .env file
+        run: |
+          docker-compose -f docker-compose.yml exec -T php-fpm-debug /bin/sh -c "cp .env.example .env"
+
       - name: Run Composer install
         run: |
           docker-compose -f docker-compose.yml exec -T php-fpm-debug /bin/sh -c "composer install"
+
+      - name: Generate application key
+        run: |
+          docker-compose -f docker-compose.yml exec -T php-fpm-debug /bin/sh -c "php artisan key:generate --ansi"
 
       - name: Run post-create-project-cmd
         run: |
