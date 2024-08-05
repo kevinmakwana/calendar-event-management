@@ -22,8 +22,14 @@ COPY --from=composer:2.7.6 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
+# Copy the Composer files
+COPY composer.json composer.lock ./
+
 # Install PHP dependencies
-RUN composer install
+RUN composer install --no-interaction --no-plugins --no-scripts
+
+# Copy the rest of the application files
+COPY . .
 
 # generate the autoload files
 RUN composer dump-autoload
@@ -41,4 +47,3 @@ FROM base as debug
 RUN apk add --update linux-headers
 RUN pecl install xdebug-3.3.2 && docker-php-ext-enable xdebug
 COPY docker-php-ext-xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
-
